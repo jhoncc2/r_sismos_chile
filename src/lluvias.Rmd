@@ -1,0 +1,124 @@
+---
+title: "Exploración de datasets de precipitaciones"
+---
+
+# Exploración de lluvias mensuales
+```{r}
+# Importar dataset de lluvias mensuales
+prAmon <- t(read.csv("../Datasets meteorológicos/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
+prAmon <- prAmon[-1, ] # Extrae los datos
+View(prAmon)
+View(t(prAmon))
+```
+
+Ahora, para poder operar los datos se necesitan descartar aquellas celdas que contengan «-9999», porque estos representan datos nulos. Esto se puede conseguir de la siguiente manera:
+```{r}
+prAmon_na <- prAmon # Copia de prAmon
+prAmon_na[prAmon == -9999] <- NA # Todas las celdas con -9999 a NA
+
+# Comparamos dimensiones
+dim(prAmon)
+dim(prAmon_na)
+```
+
+Donde se aprecia que no se habrían perdido datos. Para ver qué pasó con los datos internos, se puede aplicar head a ciertas columnas, porque si no no se puede ver todo:
+```{r}
+head(prAmon_na[, 3:17])
+```
+Se puede apreciar que los datos -9999 fueron cambiados por NA.
+
+Entonces, se puede aplciar el promedio de todos los años desde 1900 hasta 2018, evitando los NA:
+```{r}
+library(dplyr)
+data <- prAmon_na[, 15:1431]  # Los datos de lluvia, sin descripción
+data <- as.data.frame(data)  # De matrix a data.frame
+data[,] <- apply(data[,], 2, function(x) as.numeric(x)) # Valores de character a numeric
+#sapply(data, class)  # Chequear que sean numeric
+prAmonMean <- prAmon_na[, 1:14]  # Tabla para poner el promedio
+prAmonMean <- as.data.frame(prAmonMean)  # De matrix a data.frame
+mean <- rowMeans(data, na.rm = TRUE)  # Calcula el promedio
+prAmonMean$mean <- mean  # Pone el promedio en la tabla
+```
+
+Ahora se pueden hacer algunos gráficos
+```{r}
+library(ggplot2)
+ggplot(prAmonMean) +
+  geom_bar(aes(x = nombre, y = mean), stat="identity") +
+  ggtitle("Promedio de precipitaciones en cualquier época del año desde 1900 a 2018\n
+para estaciones de sudamérica") + # título
+  xlab("Nombre estación") + ylab("Promedio precipitaciones")  # etiquetas
+```
+
+Son demasiados los datos, así que tratamos de agruparlos por comuna o región más cercana.
+Estos no los usamos finalmente:
+Norte 1: -17.4605207, -69.5896145 -- -21.4477732, -69.2533751
+Norte 2: -21.4477732, -69.2533751 -- -25.3778431, -69.4961982
+Norte 3: -27.9324193, -70.6130919 -- -31.7575293, -70.9859011
+Centro 1: -31.7575293, -70.9859011 -- -35.057169, -71.293296
+Centro 2: -35.057169, -71.293296 -- -37.480966, -72.113703
+Centro 3: -37.480966, -72.113703 -- -39.062552, -72.607665
+Sur 1: -37.480966, -72.113703 -- -43.372572, -73.244932
+Sur 2: -43.372572, -73.244932 -- -46.920448, -74.251747
+Sur 3: -46.920448, -74.251747 -- -51.127393, -75.021931
+Sur 4: -51.127393, -75.021931 -- -56.112443, -68.765031
+
+Estos sí:
+**Latitudes aproximadas de las regiones (Límites sur)**:
+Arica y Parinacota: -17.4605207 -- -19.074543
+Tarapacá: -21.4736859
+Antofagasta: -25.877909
+Atacama: -29.273360
+Coquimbo: -32.103216
+Valparaíso: -33.130581
+Metropolitana: -34.070436
+Bernardo O'Higgins: -34.821344
+Maule: -36.276864
+Ñuble: -36.651832
+Biobío: -37.833320
+Araucanía: -39.455727
+Los Ríos: -40.543828
+Los Lagos: -43.472729
+Aysén: -49.098570
+Magallanes: -56.051547
+
+Con esta clasificación aproximada, se creará un dataset por región, para comparar el promedio de lluvias por cada una y ver si los datos se asemejan a la intuición que se tiene.
+
+A continuación se muestra un ejemplo de algunos:
+```{r}
+prAmonMean$latitud <- as.numeric(as.character(prAmonMean$latitud)) # Se debe hacer numérico
+
+prAmonMean_arica <- filter(prAmonMean, latitud <= -17.46 & latitud >= -19.07)
+prAmonMean_tarapaca <- filter(prAmonMean, latitud < -19.07 & latitud >= -21.47)
+prAmonMean_losLagos <- filter(prAmonMean, latitud < -40.54 & latitud >= -43.47)
+prAmonMean_aysen <- filter(prAmonMean, latitud < -43.47 & latitud >= -49.10)
+prAmonMean_magallanes <- filter(prAmonMean, latitud < -49.10 & latitud >= -56)
+
+
+ggplot(prAmonMean_magallanes) +
+  geom_bar(aes(x = nombre, y = mean), stat="identity") +
+  ggtitle("Promedio de precipitaciones en cualquier época del año desde 1900 a 2018\n
+para estaciones de la Región de Magallanes") + # título
+  xlab("Nombre estación") + ylab("Promedio precipitaciones")  # etiquetas
+
+ggplot(prAmonMean_arica) +
+  geom_bar(aes(x = nombre, y = mean), stat="identity") +
+  ggtitle("Promedio de precipitaciones en cualquier época del año desde 1900 a 2018\n
+para estaciones de la Región de Arica y Parinacota") + # título
+  xlab("Nombre estación") + ylab("Promedio precipitaciones")  # etiquetas
+```
+
+
+
+Ahora nos gustaría obtener el promedio de las lluvias de agosto, para Arica:
+```{r}
+prAmon_na <- as.data.frame(prAmon_na)
+prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
+prAmonArica <- filter(prAmon_na, latitud <= -17.46 & latitud >= -19.07)
+prAmonArica_agosto <- prAmonArica %>% select(ends_with("08"))
+#dim(prAmonArica_agosto) # 43 118
+data <- as.data.frame(prAmonArica_agosto[, 15:118])
+data <- apply(data, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_agosto_mean <- rowMeans(data, na.rm = TRUE)
+```
