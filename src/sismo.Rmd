@@ -1,0 +1,145 @@
+---
+title: "sism"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## IRIS DATASET
+
+### IRIS Incorporated Research Institutions for Seismology
+Sus siglas en espanol Institutos de investigacion corporativos de sismologia. IRIS provee equipamento y acceso sismico y otros datos al rededor del mundo, cortesia una red sismografos de la comunidad cientifica  internacional y de Estados Unidos. IRIS provee accessos a datos sismicos a traves de servicios online. 
+
+En este proyecto utilizamos datos relacionados a la region de Chile definidos por IRIS. Un ejemplo de los datos se puede ver en siguiente grafico.
+"Utilizamos ggmap" un servicio de Google, utilizamos esta libreria bajo los teminos de servicio de (Google)[https://cloud.google.com/maps-platform/terms/].
+```{r lat_depth, echo=FALSE}
+library(caret)
+library(dplyr)
+library(ggmap)
+
+# data(Sacramento)
+# df <- Sacramento %>% group_by(city) %>%
+#     summarize(median_price = median(price), transactions = n(),
+#               latitude = mean(latitude), longitude = mean(longitude))
+
+
+# ggplot() +
+#  geom_point(data = data, mapping = aes(x = Longitude, y = Latitude,
+#         col = Depth, size = Magnitude)) +
+#  scale_color_distiller(palette = "YlOrRd", direction = 1)
+
+# Chile borders
+maxlat <- -15.400
+minlat <- -57.000
+maxlon <- -63.800
+minlon <- -83.100
+
+mapData = tail(data, n=100)
+# calculate borders
+height <- max(mapData$Latitude) - min(mapData$Latitude)
+width <- max(mapData$Longitude) - min(mapData$Longitude)
+sac_borders <- c(bottom  = min(mapData$Latitude)  - 0.1 * height, 
+                top     = max(mapData$Latitude)  + 0.1 * height,
+                left    = min(mapData$Longitude) - 0.1 * width,
+                right   = max(mapData$Longitude) + 0.1 * width)
+
+map <- get_stamenmap(sac_borders, zoom = 5, maptype = "toner-lite")
+ggmap(map) +
+  geom_point(data = mapData, mapping = aes(x = Longitude, y = Latitude,
+        col = Magnitude, size = Depth)) +
+  scale_color_distiller(palette = "YlOrRd", direction = 1)
+```
+
+### Datos
+Siendo Chile uno de los paises con mas frequencia de sismos en el mundo, IRIS clasifica los sismos dentro de la region de Chile dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (maxima lat=-15.400, minima lat=-57.000, maxima lon=-63.800, minima lon=-83.100). El grafico puede ser visto en el siguiente [link](http://ds.iris.edu/ieb/index.html?format=text&nodata=404&orderby=time-desc&src=&limit=1000&maxlat=-15.400&minlat=-57.000&maxlon=-63.800&minlon=-83.100&sbl=1&caller=spanlnk&name=Región%20de%20Chile&zm=4&mt=roa).
+
+TODO: especificacion de los datos, columas ...
+
+Carga de los datos e importacion de librerias
+```{r sismos}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+all <- read.delim("/Users/jhonc/Workspace/data-mining/data/iris-data/chile_data/all.csv", header = TRUE, sep = "|", quote = "\"",
+           dec = ".", fill = TRUE, comment.char = "#")
+data <- all
+
+maxlat <- -15.400
+minlat <- -57.000
+maxlon <- -63.800
+minlon <- -83.100
+
+
+```
+
+Informacion basica de las propiedades(columnas) del dataset.
+
+```{r pressure, echo=FALSE}
+summary(data)
+```
+
+Note que los datos geograficos estan clasificados por ubicaciones definidas por IRIS. No existe casificacion por region dentro de Chile. Ademas, las localizaciones no son exclusivas de Chile, sino de la region a su alrededor, componiendo paises Argentina, Bolivia y Peru, como tambien parte del oceano pacifico.
+
+```{r event_location}
+unique(data$EventLocationName)
+```
+
+
+
+
+El siguiente grafico muestra la variacion de magnitudes de por las localizaciones definidas por IRIS.
+
+```{r boxplot_magnitude}
+data <- all
+ggplot(data, aes(x = EventLocationName, y = Magnitude)) + 
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Location Name") + 
+  ylab("Magnitude")
+```
+
+```{r pressure}
+data <- all
+ggplot(data, aes(x = EventLocationName, y = Depth)) + 
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Location Name") + 
+  ylab("Depth")
+```
+
+Los siguientes graficos muestra el impacto de las zonas en Chile sin utilizar un mapa. En otras palabras, podemos apreciar las magnitudes por coordenadas.
+
+```{r pressure}
+ggplot(data, aes(x = Magnitude, y = Latitude)) + 
+  geom_point() + 
+  coord_flip()
+```
+
+```{r pressure}
+ggplot(data, aes(x = Magnitude, y = Longitude)) + 
+  geom_point() +
+  coord_flip()
+```
+
+De la misma manera podemos mostrar los datos de profundidad por longitud y latitud.
+
+```{r lat_depth}
+ggplot(data, aes(x = Depth, y = Latitude)) + 
+  geom_point() + 
+  coord_flip()
+```
+
+```{r lat_depth}
+ggplot(data, aes(x = Depth, y = Longitude)) + 
+  geom_point() +
+  coord_flip()
+```
+
+
+
+
+
+
