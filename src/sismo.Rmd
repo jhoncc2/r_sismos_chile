@@ -14,7 +14,7 @@ Sus siglas en espanol Institutos de investigacion corporativos de sismologia. IR
 
 En este proyecto utilizamos datos relacionados a la region de Chile definidos por IRIS. Un ejemplo de los datos se puede ver en siguiente grafico.
 "Utilizamos ggmap" un servicio de Google, utilizamos esta libreria bajo los teminos de servicio de (Google)[https://cloud.google.com/maps-platform/terms/].
-```{r lat_depth, echo=FALSE}
+```{r map, echo=FALSE}
 library(caret)
 library(dplyr)
 library(ggmap)
@@ -77,7 +77,7 @@ minlon <- -83.100
 
 Informacion basica de las propiedades(columnas) del dataset.
 
-```{r pressure, echo=FALSE}
+```{r summary, echo=FALSE}
 summary(data)
 ```
 
@@ -92,7 +92,7 @@ unique(data$EventLocationName)
 
 El siguiente grafico muestra la variacion de magnitudes de por las localizaciones definidas por IRIS.
 
-```{r boxplot_magnitude}
+```{r mag}
 data <- all
 ggplot(data, aes(x = EventLocationName, y = Magnitude)) + 
   geom_boxplot() +
@@ -101,7 +101,7 @@ ggplot(data, aes(x = EventLocationName, y = Magnitude)) +
   ylab("Magnitude")
 ```
 
-```{r pressure}
+```{r depth}
 data <- all
 ggplot(data, aes(x = EventLocationName, y = Depth)) + 
   geom_boxplot() +
@@ -112,13 +112,13 @@ ggplot(data, aes(x = EventLocationName, y = Depth)) +
 
 Los siguientes graficos muestra el impacto de las zonas en Chile sin utilizar un mapa. En otras palabras, podemos apreciar las magnitudes por coordenadas.
 
-```{r pressure}
+```{r lat_mag}
 ggplot(data, aes(x = Magnitude, y = Latitude)) + 
   geom_point() + 
   coord_flip()
 ```
 
-```{r pressure}
+```{r lon_mag}
 ggplot(data, aes(x = Magnitude, y = Longitude)) + 
   geom_point() +
   coord_flip()
@@ -132,7 +132,7 @@ ggplot(data, aes(x = Depth, y = Latitude)) +
   coord_flip()
 ```
 
-```{r lat_depth}
+```{r lon_depth}
 ggplot(data, aes(x = Depth, y = Longitude)) + 
   geom_point() +
   coord_flip()
