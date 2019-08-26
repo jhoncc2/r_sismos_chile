@@ -1,7 +1,7 @@
 source("./cargar_sismos_con_region.r")
 source("./cargar_etas.r")
 
-sismos <- cargar_sismos_con_region()
+cargar_sismos_con_region()
 
 cant_etas_2011 <- data.frame("Año"=eta2011$Año.estadistico, "Región"=eta2011$Región.de.consumo,
                              "Cantidad"=eta2011$Región.de.consumo)

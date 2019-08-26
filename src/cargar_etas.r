@@ -1,6 +1,6 @@
 # Cargar los datos de Enfermedades Transmitidas por alimentos
 library(xlsx)
-
+directorio_padre <- "../Datasets brotes ETA/"
 eta2011 <- read.xlsx(paste(directorio_padre, "Bases de brotes ETA ", 2011, ".xlsx", sep=""),
                      sheetIndex=1, header=TRUE)
 eta2012 <- read.xlsx(paste(directorio_padre, "Bases de brotes ETA ", 2012, ".xlsx", sep=""),
