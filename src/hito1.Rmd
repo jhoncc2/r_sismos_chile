@@ -205,6 +205,23 @@ prAmonMean_magallanes <- filter(prAmonMean, latitud < -49.10 & latitud >= -56)
 ```
 De esta manera, se obtienen los siguientes gráficos:
 
+```{r}
+
+ggplot(prAmonMean_magallanes) +
+  geom_bar(aes(x = nombre_cuenca, y = mean), stat="identity") +
+  ggtitle("Promedio de precipitaciones en cualquier época del año desde 1900 a 2018\n
+para estaciones de la Región de Magallanes") + # título
+  theme(axis.text.y = element_text(angle = 45, hjust = 1)) +
+  xlab("Nombre cuenca") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE) # etiquetas
+
+ggplot(prAmonMean_arica) +
+  geom_bar(aes(x = nombre_cuenca, y = mean), stat="identity") +
+  ggtitle("Promedio de precipitaciones en cualquier época del año desde 1900 a 2018\n
+para estaciones de la Región de Arica y Parinacota") + # título
+  theme(axis.text.y = element_text(angle = 30, hjust = 1)) +
+  xlab("Nombre cuenca") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE) # etiquetas
+```
+
 
 Ahora sí se aprecia una diferencia respecto al norte y al sur. Sin embargo, lo más ilustrativo que se puede obtener es determinar las precipitaciones en cada mes del año. De la siguiente forma se extraen las precipitaciones mensuales para la región de Arica:
 ```{r}
