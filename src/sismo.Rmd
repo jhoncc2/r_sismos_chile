@@ -15,6 +15,15 @@ Sus siglas en espanol Institutos de investigacion corporativos de sismologia. IR
 En este proyecto utilizamos datos relacionados a la region de Chile definidos por IRIS. Un ejemplo de los datos se puede ver en siguiente grafico.
 "Utilizamos ggmap" un servicio de Google, utilizamos esta libreria bajo los teminos de servicio de (Google)[https://cloud.google.com/maps-platform/terms/].
 ```{r map, echo=FALSE}
+# Carga de los datos e importacion de librerias
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+all <- read.delim("/Users/jhonc/Workspace/data-mining/data/iris-data/chile_data/all.csv", header = TRUE, sep = "|", quote = "\"",
+           dec = ".", fill = TRUE, comment.char = "#")
+data <- all
+
 library(caret)
 library(dplyr)
 library(ggmap)
@@ -57,23 +66,7 @@ Siendo Chile uno de los paises con mas frequencia de sismos en el mundo, IRIS cl
 
 TODO: especificacion de los datos, columas ...
 
-Carga de los datos e importacion de librerias
-```{r sismos}
-library(ggplot2)
-library(dplyr)
-library(tidyverse)
 
-all <- read.delim("/Users/jhonc/Workspace/data-mining/data/iris-data/chile_data/all.csv", header = TRUE, sep = "|", quote = "\"",
-           dec = ".", fill = TRUE, comment.char = "#")
-data <- all
-
-maxlat <- -15.400
-minlat <- -57.000
-maxlon <- -63.800
-minlon <- -83.100
-
-
-```
 
 Informacion basica de las propiedades(columnas) del dataset.
 
@@ -86,9 +79,6 @@ Note que los datos geograficos estan clasificados por ubicaciones definidas por 
 ```{r event_location}
 unique(data$EventLocationName)
 ```
-
-
-
 
 El siguiente grafico muestra la variacion de magnitudes de por las localizaciones definidas por IRIS.
 
@@ -138,8 +128,69 @@ ggplot(data, aes(x = Depth, y = Longitude)) +
   coord_flip()
 ```
 
+### Sismos por estaciones del anio
+
+Primero mostramos la grafica de sismos a traves de las estaciones del anio tomando en cuenta datos desde el anio 1960 hasta el 2019.
+
+```{r}
+# load libraries
+library(tidyverse)
+library(lubridate)
+
+# create new columns 
+
+dtime = as.Date(data$Time)
+season_data <-  mutate(data,
+  year = year(dtime),
+  month = month(dtime),
+  mday = mday(dtime)
+)
+
+# consider the limitation of seasons simply by looking into range of values
+# we bound the seasons by month value, 
+# we round the days of the season boundary. E.g. Sept 21 -> OCT
+
+season_data <- mutate(season_data,
+  season = case_when (
+      month >= 4 & month <= 6 ~ "otonio",
+      month >= 7 & month <= 9 ~ "invierno",
+      month >= 10 & month <= 12 ~ "primavera",
+      month >= 1 & month <= 3 ~ "verano"
+    )
+) 
 
 
+# install if needed ggpubr
+#install.packages("ggpubr")
+library(ggpubr)
+
+bplot <- season_data %>% 
+  # filter(year > 2010) %>% 
+  ggplot(mapping = aes(x=season)) + 
+  geom_bar()
+
+dplot <- season_data %>% 
+  group_by(season) %>% 
+  summarise(total = n()) %>% 
+  ggplot(mapping = aes(x=season, y=total)) +
+  geom_point() 
+
+ggarrange(bplot, dplot,
+                    ncol = 2, nrow = 1)
+
+```
+
+
+El primer grafico puede dejar un poco la duda de la diferencia que existe entre estos. Figura 2 muestra claramente la diferencia entre la frequencia de eventos sismologicos en las estaciones del anio. Podemos ver que Otonio y Verano tienen mayor frequencia de terremotos.
+
+### Cantidad de datos del dataset
+
+El grafico de abajo muestra la cantidad de reportes recolectados por anio, dentro de las inferencias, y consultas hechas los outliers que puedan ser registrados con equipos antiguos estan extentos por ser minima en su cantidad.
+
+```{r}
+ggplot(season_data, mapping = aes(x=year)) +
+  geom_bar()
+```
 
 
 

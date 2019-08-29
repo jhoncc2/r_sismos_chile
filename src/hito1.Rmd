@@ -1,0 +1,470 @@
+---
+title: "tmp"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Introducción
+Los sismos son un fenómeno natural muy presente en nuestro país. El fenómeno es aún impredecible.
+
+Algunas correlaciones con otros fenómenos han sido estudiadas. Entre ellas, se indagó principalmente en 2 estudios: el primero, sobre la relación de los sismos con las lluvias monzónicas en el Himalaya, y el segundo, sobre la influencia del sol en ellos.
+
+Resultados del primer estudio mostraron que la frecuencia de sismos en el Himalaya se veía disminuida con los eventos monzónicos. Del segundo estudio, se extrajo que los datos sugerían que la mayor cantidad de sismos ocurrían en horarios diurnos
+
+Por otro lado, un sismo también puede tener consecuencias, por lo que se decidió indagar si los sismos tienen un impacto en las enfermedades transmitidas por alimentos. El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
+
+#Hipótesis.
+
+De acuerdo a observaciones y trabajo previo en el área las siguientes hipótesis.
+
+Configuración A: Correlación entre clima y terremotos en Chile.
+Esta configuración surge de la siguiente pregunta: ¿existirá una relación entre el clima y los terremotos? Las hipótesis que puede surgir son:
+Existe una correlación entre los cambios estacionales del año y la frecuencia de los terremotos.
+Existe una correlación entre precipitaciones fluviales y sismos o con sismos de gran magnitud.
+
+Configuracion B: Correlación entre sismos y enfermedades transmitidas por alimentos en Chile.
+Esta configuración surge después de la pregunta si los terremotos presentan alguna correlación con la salud de los chilenos. En particular, si, debido a los daños en infraestructura que generan los terremotos se provoca un aumento en las enfermedades transmitidas por alimentos de los chilenos. Surgió la hipótesis:
+Existe una correlación entre las enfermedades transmitidas por alimentos y la ocurrencia de eventos sísmicos, en particular aquellos de mayor magnitud.
+
+#Metodología
+Se busca juntar los datasets, como los de sismos, precipitaciones fluviales, temperatura y eventos de salud para buscar las correlaciones mencionadas más arriba. La forma de juntarlos sería mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron. De esta manera se encontrará la correlación entre los eventos planteados en para confirmar o rechazar las hipótesis.
+
+
+
+#Descripción de los datos
+A continuación se mostrará una descripción de los datos que se van a utilizar.
+
+##Datos sismológicos
+IRIS Incorporated Research Institutions for Seismology
+Sus siglas en espanol Institutos de investigación corporativos de sismología. IRIS provee equipamiento y acceso sísmico y otros datos alrededor del mundo, cortesía una red sismógrafos de la comunidad científica  internacional y de Estados Unidos. IRIS provee accesos a datos sísmicos a través de servicios online. Siendo Chile uno de los paises con mas frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de la región de Chile dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación
+
+```{r map, echo=FALSE}
+# Carga de los datos e importacion de librerias
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(caret)
+library(dplyr)
+library(ggmap)
+
+data <- read.delim("/Users/jhonc/Workspace/data-mining/data/iris-data/chile_data/all.csv", header = TRUE, sep = "|", quote = "\"",
+           dec = ".", fill = TRUE, comment.char = "#")
+
+mapData = tail(data, n=100)
+# calculate borders
+height <- max(mapData$Latitude) - min(mapData$Latitude)
+width <- max(mapData$Longitude) - min(mapData$Longitude)
+sac_borders <- c(bottom  = min(mapData$Latitude)  - 0.1 * height, 
+                top     = max(mapData$Latitude)  + 0.1 * height,
+                left    = min(mapData$Longitude) - 0.1 * width,
+                right   = max(mapData$Longitude) + 0.1 * width)
+
+map <- get_stamenmap(sac_borders, zoom = 5, maptype = "toner-lite")
+ggmap(map) +
+  geom_point(data = mapData, mapping = aes(x = Longitude, y = Latitude,
+        col = Magnitude, size = Depth)) +
+  scale_color_distiller(palette = "YlOrRd", direction = 1)
+```
+Dentro de los datos que se utilizaran para el analysis estan: longitud, latitud, magnitud, profundidad, y tiempo
+Longitud y latitud son parte del sistema de coordenadas geográficas es un sistema que referencia cualquier punto de la superficie terrestre y que utiliza para ello dos coordenadas angulares, latitud (norte o sur) y longitud (este u oeste).
+Magnitud es una medida que tiene relación con la cantidad de energía liberada en forma de ondas.
+Profundad define la distancia entre el epicentro de un terremoto con respecto al nivel del mar.
+Tiempo es el registro del evento.
+
+### Profundidad y magnitud
+
+Los siguientes gráficos muestra el impacto de las zonas en Chile sin utilizar un mapa. En otras palabras, podemos apreciar las magnitudes por latitud.
+
+```{r lat_mag}
+ggplot(data, aes(x = Magnitude, y = Latitude)) + 
+  geom_point() + 
+  coord_flip()
+```
+
+De la misma manera podemos mostrar los datos de profundidad por latitud.
+
+```{r lat_depth}
+ggplot(data, aes(x = Depth, y = Latitude)) + 
+  geom_point() + 
+  coord_flip()
+```
+### Sismos por estaciones del año
+
+Primero mostramos la gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019.
+
+```{r}
+# load libraries
+library(tidyverse)
+library(lubridate)
+
+# create new columns 
+
+dtime = as.Date(data$Time)
+season_data <-  mutate(data,
+  year = year(dtime),
+  month = month(dtime),
+  mday = mday(dtime)
+)
+
+# consider the limitation of seasons simply by looking into range of values
+# we bound the seasons by month value, 
+# we round the days of the season boundary. E.g. Sept 21 -> OCT
+
+season_data <- mutate(season_data,
+  season = case_when (
+      month >= 4 & month <= 6 ~ "otonio",
+      month >= 7 & month <= 9 ~ "invierno",
+      month >= 10 & month <= 12 ~ "primavera",
+      month >= 1 & month <= 3 ~ "verano"
+    )
+) 
+
+
+# install if needed ggpubr
+#install.packages("ggpubr")
+library(ggpubr)
+
+bplot <- season_data %>% 
+  # filter(year > 2010) %>% 
+  ggplot(mapping = aes(x=season)) + 
+  geom_bar()
+
+dplot <- season_data %>% 
+  group_by(season) %>% 
+  summarise(total = n()) %>% 
+  ggplot(mapping = aes(x=season, y=total)) +
+  geom_point() 
+
+ggarrange(bplot, dplot,
+                    ncol = 2, nrow = 1)
+
+```
+
+
+El primer gráfico puede dejar un poco la duda de la diferencia que existe entre estos. Figura 2 muestra claramente la diferencia entre la frecuencia de eventos sísmicos en las estaciones del año. Podemos ver que Otoño y Verano tienen mayor frecuencia de terremotos.
+
+### Cantidad de datos del dataset
+
+El gráfico de abajo muestra la cantidad de reportes recolectados por año, dentro de las inferencias, y consultas hechas los outliers que puedan ser registrados con equipos antiguos están exentos por ser mínima en su cantidad.
+
+```{r}
+ggplot(season_data, mapping = aes(x=year)) +
+  geom_bar()
+```
+
+Datos de precipitaciones fluviales
+Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros.
+
+Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
+
+Se puede explorar el dataset de la siguiente forma:
+```{r}
+# Importar dataset de lluvias mensuales
+prAmon <- t(read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets\ meteorológicos/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
+prAmon <- prAmon[-1, ] # Extrae los datos
+
+prAmon_na <- prAmon # Copia de prAmon
+prAmon_na[prAmon == -9999] <- NA # Todas las celdas con -9999 a NA
+```
+Se deben declarar como NA los datos con -9999 que representan datos faltantes, para que R los trabaje de buena manera.
+
+Luego se aplica el promedio de todos los años desde 1900 a 2018, evitando los NA.
+```{r}
+library(dplyr)
+data <- prAmon_na[, 15:1431]  # Los datos de lluvia, sin descripción
+data <- as.data.frame(data)  # De matrix a data.frame
+data[,] <- apply(data[,], 2, function(x) as.numeric(x)) # Valores de character a numeric
+prAmonMean <- prAmon_na[, 1:14]  # Tabla para poner el promedio
+prAmonMean <- as.data.frame(prAmonMean)  # De matrix a data.frame
+mean <- rowMeans(data, na.rm = TRUE)  # Calcula el promedio
+prAmonMean$mean <- mean  # Pone el promedio en la tabla
+```
+Para graficar por último:
+```{r}
+library(ggplot2)
+ggplot(prAmonMean) +
+  geom_bar(aes(x = nombre, y = mean), stat="identity") +
+  ggtitle("Promedio de precipitaciones en cualquier época del año desde 1900 a 2018\n
+para estaciones de Chile") + # título
+  xlab("Nombre estación") + ylab("Promedio precipitaciones")  # etiquetas
+```
+
+Pero no es para nada claro, debido a que Chile tiene muchos climas distintos. Así, es mejor separar por regiones. La clasificación se hace de manera arbitraria, determinando las latitudes en las cuales las regiones, aproximadamente, se separan.
+```{r}
+prAmonMean$latitud <- as.numeric(as.character(prAmonMean$latitud)) # Se debe hacer numérico
+prAmonMean_arica <- filter(prAmonMean, latitud <= -17.46 & latitud >= -19.07)
+prAmonMean_magallanes <- filter(prAmonMean, latitud < -49.10 & latitud >= -56)
+```
+De esta manera, se obtienen los siguientes gráficos:
+
+
+Ahora sí se aprecia una diferencia respecto al norte y al sur. Sin embargo, lo más ilustrativo que se puede obtener es determinar las precipitaciones en cada mes del año. De la siguiente forma se extraen las precipitaciones mensuales para la región de Arica:
+```{r}
+prAmonArica_ene <- prAmonArica %>% select(ends_with("01"))
+prAmonArica_ene <- apply(prAmonArica_ene, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_feb <- prAmonArica %>% select(ends_with("02"))
+prAmonArica_feb <- apply(prAmonArica_feb, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_mar <- prAmonArica %>% select(ends_with("03"))
+prAmonArica_mar <- apply(prAmonArica_mar, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_abr <- prAmonArica %>% select(ends_with("04"))
+prAmonArica_abr <- apply(prAmonArica_abr, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_may <- prAmonArica %>% select(ends_with("05"))
+prAmonArica_may <- apply(prAmonArica_may, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_jun <- prAmonArica %>% select(ends_with("06"))
+prAmonArica_jun <- apply(prAmonArica_jun, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_jul <- prAmonArica %>% select(ends_with("07"))
+prAmonArica_jul <- apply(prAmonArica_jul, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_ago <- prAmonArica %>% select(ends_with("08"))
+prAmonArica_ago <- apply(prAmonArica_ago, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_sep <- prAmonArica %>% select(ends_with("09"))
+prAmonArica_sep <- apply(prAmonArica_sep, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_oct <- prAmonArica %>% select(ends_with("10"))
+prAmonArica_oct <- apply(prAmonArica_oct, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_nov <- prAmonArica %>% select(ends_with("11"))
+prAmonArica_nov <- apply(prAmonArica_nov, 2, function(x) as.numeric(as.character(x)))
+prAmonArica_dic <- prAmonArica %>% select(ends_with("12"))
+prAmonArica_dic <- apply(prAmonArica_dic, 2, function(x) as.numeric(as.character(x)))
+
+prAmonAricaMeses <- prAmonArica[, 1:14]
+
+prAmonAricaMeses$enero <- rowMeans(prAmonArica_ene, na.rm = TRUE)
+prAmonAricaMeses$febrero <- rowMeans(prAmonArica_feb, na.rm = TRUE)
+prAmonAricaMeses$marzo <- rowMeans(prAmonArica_mar, na.rm = TRUE)
+prAmonAricaMeses$abril <- rowMeans(prAmonArica_abr, na.rm = TRUE)
+prAmonAricaMeses$mayo <- rowMeans(prAmonArica_may, na.rm = TRUE)
+prAmonAricaMeses$junio <- rowMeans(prAmonArica_jun, na.rm = TRUE)
+prAmonAricaMeses$julio <- rowMeans(prAmonArica_jul, na.rm = TRUE)
+prAmonAricaMeses$agosto <- rowMeans(prAmonArica_ago, na.rm = TRUE)
+prAmonAricaMeses$septiembre <- rowMeans(prAmonArica_sep, na.rm = TRUE)
+prAmonAricaMeses$octubre <- rowMeans(prAmonArica_oct, na.rm = TRUE)
+prAmonAricaMeses$noviembre <- rowMeans(prAmonArica_nov, na.rm = TRUE)
+prAmonAricaMeses$diciembre <- rowMeans(prAmonArica_dic, na.rm = TRUE)
+
+
+library(tidyverse)
+prAmonAricaMeses_mean <- gather(prAmonAricaMeses, key="Mes", value="Promedio", enero:diciembre)
+
+prAmonAricaMeses_mean$Mes <- factor(prAmonAricaMeses_mean$Mes, levels = c("diciembre", "noviembre", "octubre", "septiembre", "agosto", "julio", "junio", "mayo", "abril", "marzo", "febrero", "enero"))
+
+ggplot(prAmonAricaMeses_mean) +
+  geom_bar(aes(x = Mes, y = Promedio), stat="identity") +
+  ggtitle("Promedio de precipitaciones en la región\n
+de Arica y Parinacota respecto a cada mes\n") + # título
+  theme(axis.text.y = element_text(angle = 30, hjust = 1)) +
+  xlab("Mes") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE)
+```
+
+
+Datos de temperaturas
+Los datos de temperaturas máximas, mínimas y medias fueron extraídos de la página del CR2, al igual que los datos de precipitaciones. Por esto, tienen la misma clasificación que ellos.
+Datos de salud alimentaria
+
+Los datos de salud alimentaria fueron extraídos de la página web del Departamento de Estadísticas e Información de Salud, en www.deis.cl.
+Se extrajeron datos de los brotes de enfermedades transmitidas por alimentos desde el año 2011 hasta el 2017, siendo estos todos los disponibles.
+
+Para hacer una primera exploración de los resultados, se contó la cantidad de casos de enfermedades transmitidas por alimentos reportadas cada año para algunas regiones afectadas por terremotos grandes que ocurrieron en el periodo 2011-2017, aquellos de Iquique el año 2014 y de Illapel el año 2015.
+
+Código utilizado para extraer los datos:
+
+```{r}
+library(xlsx)
+source("/Users/jhonc/Workspace/data-mining/r_sismos_chile/src/cargar_sismos_con_region.r")
+source("/Users/jhonc/Workspace/data-mining/r_sismos_chile/src/cargar_etas.r")
+
+cargar_sismos_con_region()
+
+cant_etas_2011 <- data.frame("Año"=eta2011$Año.estadistico, "Región"=eta2011$Región.de.consumo,
+                             "Cantidad"=eta2011$Región.de.consumo)
+
+cant_etas_2012 <- data.frame("Año"=eta2012$Año.estadistico, "Región"=eta2012$Región.de.consumo,
+                             "Cantidad"=eta2012$Región.de.consumo)
+
+cant_etas_2013 <- data.frame("Año"=eta2013$Año.estadistico, "Región"=eta2013$Región.de.consumo,
+                             "Cantidad"=eta2013$Región.de.consumo)
+
+cant_etas_2014 <- data.frame("Año"=eta2014$Año.estadistico, "Región"=eta2014$Región.de.consumo,
+                             "Cantidad"=eta2014$Región.de.consumo)
+
+cant_etas_2015 <- data.frame("Año"=eta2015$Año.estadistico, "Región"=eta2015$Región.de.consumo,
+                             "Cantidad"=eta2015$Región.de.consumo)
+
+cant_etas_2016 <- data.frame("Año"=eta2016$Año.estadistico, "Región"=eta2016$Región.de.consumo,
+                             "Cantidad"=eta2016$Región.de.consumo)
+
+cant_etas_2017 <- data.frame("Año"=eta2017$Año.estadistico, "Región"=eta2017$Región.de.consumo,
+                             "Cantidad"=eta2017$Región.de.consumo)
+
+cant_etas_2011 <- aggregate(Cantidad ~ Año + Región, cant_etas_2011, function(a) {sum(a>0)})
+cant_etas_2012 <- aggregate(Cantidad ~ Año + Región, cant_etas_2012, function(a) {sum(a>0)})
+cant_etas_2013 <- aggregate(Cantidad ~ Año + Región, cant_etas_2013, function(a) {sum(a>0)})
+cant_etas_2014 <- aggregate(Cantidad ~ Año + Región, cant_etas_2014, function(a) {sum(a>0)})
+cant_etas_2015 <- aggregate(Cantidad ~ Año + Región, cant_etas_2015, function(a) {sum(a>0)})
+cant_etas_2016 <- aggregate(Cantidad ~ Año + Región, cant_etas_2016, function(a) {sum(a>0)})
+cant_etas_2017 <- aggregate(Cantidad ~ Año + Región, cant_etas_2017, function(a) {sum(a>0)})
+
+cant_etas <- rbind(cant_etas_2011, cant_etas_2012, cant_etas_2013, cant_etas_2014,
+                   cant_etas_2015, cant_etas_2016, cant_etas_2017)
+
+library(ggplot2)  # cargamos la librería
+
+ggplot(cant_etas[cant_etas$Región == 4, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA anuales\npara la Región de Coquimbo") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+ggplot(cant_etas[cant_etas$Región == 1, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA anuales\npara la Región de Tarapacá") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+ggplot(cant_etas[cant_etas$Región == 2, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA anuales\npara la Región de Antofagasta") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+ggplot(cant_etas[cant_etas$Región == 3, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA anuales\npara la Región de Atacama") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+ggplot(cant_etas[cant_etas$Región == 5, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA anuales\npara la Región de Valparaíso") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+cant_etas_deshidratacion_2011 <- data.frame("Año"=eta2011[eta2011$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2012 <- data.frame("Año"=eta2012[eta2012$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2013 <- data.frame("Año"=eta2013[eta2013$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2014 <- data.frame("Año"=eta2014[eta2014$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2015 <- data.frame("Año"=eta2015[eta2015$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2016 <- data.frame("Año"=eta2016[eta2016$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2017 <- data.frame("Año"=eta2017[eta2017$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo)
+
+cant_etas_deshidratacion <- rbind(cant_etas_deshidratacion_2011,
+                                  cant_etas_deshidratacion_2012,
+                                  cant_etas_deshidratacion_2013,
+                                  cant_etas_deshidratacion_2014,
+                                  cant_etas_deshidratacion_2015,
+                                  cant_etas_deshidratacion_2016,
+                                  cant_etas_deshidratacion_2017)
+
+ggplot(cant_etas[cant_etas_deshidratacion$Región == 1, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA por deshidratación anuales\npara la Región de Tarapacá") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+ggplot(cant_etas[cant_etas_deshidratacion$Región == 2, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA por deshidratación anuales\npara la Región de Antofagasta") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+```
+
+El código de carga de los datos corresponde a
+```{r}
+cargar_sismos_con_region <- function() {
+  sismos <- read.csv("../Datasets sismológicos/files/all.csv",
+                     header=TRUE, sep="|", quote="\"", dec=".", fill=TRUE, comment.char="#")
+  sismos$Region_Name <- NA
+  sismos$Region_Number <- NA
+  for (i in 1:nrow(sismos)) {
+    lat= sismos[i, "Latitude"]
+    # Arica parte en -17.4605207
+    if (lat > -19.074543) {
+      sismos[i, "Region_Name"] <- "Región de Arica y Parinacota"
+      sismos[i, "Region_Number"] <- 15
+    }
+    else if (lat > -21.4736859) {
+      sismos[i, "Region_Name"] <- "Región de Tarapacá"
+      sismos[i, "Region_Number"] <- 1
+    }
+    else if (lat > -25.877909) {
+      sismos[i, "Region_Name"] <- "Región de Antofagasta"
+      sismos[i, "Region_Number"] <- 2
+    }
+    else if (lat > -29.273360) {
+      sismos[i, "Region_Name"] <- "Región de Atacama"
+      sismos[i, "Region_Number"] <- 3
+    }
+    else if (lat > -32.103216) {
+      sismos[i, "Region_Name"] <- "Región de Coquimbo"
+      sismos[i, "Region_Number"] <- 4
+    }
+    else if (lat > -33.130581) {
+      sismos[i, "Region_Name"] <- "Región de Valparaíso"
+      sismos[i, "Region_Number"] <- 5
+    }
+    else if (lat > -34.070436) {
+      sismos[i, "Region_Name"] <- "Región Metropolitana de Santiago"
+      sismos[i, "Region_Number"] <- 13
+    }
+    else if (lat > -34.821344) {
+      sismos[i, "Region_Name"] <- "Región del Libertador General Bernardo O’Higgins"
+      sismos[i, "Region_Number"] <- 6
+    }
+    else if (lat > -36.276864) {
+      sismos[i, "Region_Name"] <- "Región del Maule"
+      sismos[i, "Region_Number"] <- 7
+    }
+    else if (lat > -36.651832) {
+      sismos[i, "Region_Name"] <- "Región de Ñuble"
+      sismos[i, "Region_Number"] <- 16
+    }
+    else if (lat > -37.833320) {
+      sismos[i, "Region_Name"] <- "Región del Biobío"
+      sismos[i, "Region_Number"] <- 8
+    }
+    else if (lat > -39.455727) {
+      sismos[i, "Region_Name"] <- "Región de la Araucanía"
+      sismos[i, "Region_Number"] <- 9
+    }
+    else if (lat > -40.543828) {
+      sismos[i, "Region_Name"] <- "Región de Los Ríos"
+      sismos[i, "Region_Number"] <- 14
+    }
+    else if (lat > -43.472729) {
+      sismos[i, "Region_Name"] <- "Región de Los Lagos"
+      sismos[i, "Region_Number"] <- 10
+    }
+    else if (lat > -49.098570) {
+      sismos[i, "Region_Name"] <- "Región de Aysén del General Carlos Ibáñez del Campo"
+      sismos[i, "Region_Number"] <- 11
+    }
+    else { # lat > -56.051547
+      sismos[i, "Region_Name"] <- "Región de Magallanes y de la Antártica Chilena"
+      sismos[i, "Region_Number"] <- 12
+    }
+  }
+  sismos
+  
+  # Latitudes aproximadas de las regiones (Límites sur):
+  # Arica y Parinacota: -17.4605207 -- -19.074543
+  # Tarapacá: -21.4736859
+  # Antofagasta: -25.877909
+  # Atacama: -29.273360
+  # Coquimbo: -32.103216
+  # Valparaíso: -33.130581
+  # Metropolitana: -34.070436
+  # Bernardo O’Higgins: -34.821344
+  # Maule: -36.276864
+  # Ñuble: -36.651832
+  # Biobío: -37.833320
+  # Araucanía: -39.455727
+  # Los Ríos: -40.543828
+  # Los Lagos: -43.472729
+  # Aysén: -49.098570
+  # Magallanes: -56.051547
+}
+
+```
+
