@@ -1,5 +1,7 @@
 ---
-title: "tmp"
+title: "Informe Hito 1: Trabajo con datos sismológicos"
+author: "Jhonny Cerezo, Cristián Llull, Rodrigo Llull"
+date: "Agosto 2019"
 output: html_document
 ---
 
@@ -7,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#Introducción
+# Introducción
 Los sismos son un fenómeno natural muy presente en nuestro país. El fenómeno es aún impredecible.
 
 Algunas correlaciones con otros fenómenos han sido estudiadas. Entre ellas, se indagó principalmente en 2 estudios: el primero, sobre la relación de los sismos con las lluvias monzónicas en el Himalaya, y el segundo, sobre la influencia del sol en ellos.
@@ -16,28 +18,30 @@ Resultados del primer estudio mostraron que la frecuencia de sismos en el Himala
 
 Por otro lado, un sismo también puede tener consecuencias, por lo que se decidió indagar si los sismos tienen un impacto en las enfermedades transmitidas por alimentos. El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
 
-#Hipótesis.
+## Hipótesis
 
 De acuerdo a observaciones y trabajo previo en el área las siguientes hipótesis.
 
-Configuración A: Correlación entre clima y terremotos en Chile.
+**Configuración A:** Correlación entre clima y terremotos en Chile.
+
 Esta configuración surge de la siguiente pregunta: ¿existirá una relación entre el clima y los terremotos? Las hipótesis que puede surgir son:
 Existe una correlación entre los cambios estacionales del año y la frecuencia de los terremotos.
 Existe una correlación entre precipitaciones fluviales y sismos o con sismos de gran magnitud.
 
-Configuracion B: Correlación entre sismos y enfermedades transmitidas por alimentos en Chile.
+**Configuracion B:** Correlación entre sismos y enfermedades transmitidas por alimentos en Chile.
+
 Esta configuración surge después de la pregunta si los terremotos presentan alguna correlación con la salud de los chilenos. En particular, si, debido a los daños en infraestructura que generan los terremotos se provoca un aumento en las enfermedades transmitidas por alimentos de los chilenos. Surgió la hipótesis:
 Existe una correlación entre las enfermedades transmitidas por alimentos y la ocurrencia de eventos sísmicos, en particular aquellos de mayor magnitud.
 
-#Metodología
+## Metodología
 Se busca juntar los datasets, como los de sismos, precipitaciones fluviales, temperatura y eventos de salud para buscar las correlaciones mencionadas más arriba. La forma de juntarlos sería mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron. De esta manera se encontrará la correlación entre los eventos planteados en para confirmar o rechazar las hipótesis.
 
 
 
-#Descripción de los datos
+# Descripción de los datos
 A continuación se mostrará una descripción de los datos que se van a utilizar.
 
-##Datos sismológicos
+## Datos sismológicos
 IRIS Incorporated Research Institutions for Seismology
 Sus siglas en espanol Institutos de investigación corporativos de sismología. IRIS provee equipamiento y acceso sísmico y otros datos alrededor del mundo, cortesía una red sismógrafos de la comunidad científica  internacional y de Estados Unidos. IRIS provee accesos a datos sísmicos a través de servicios online. Siendo Chile uno de los paises con mas frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de la región de Chile dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación
 
@@ -50,7 +54,7 @@ library(caret)
 library(dplyr)
 library(ggmap)
 
-data <- read.delim("/Users/jhonc/Workspace/data-mining/data/iris-data/chile_data/all.csv", header = TRUE, sep = "|", quote = "\"",
+data <- read.delim("../Datasets sismológicos/files/all.csv", header = TRUE, sep = "|", quote = "\"",
            dec = ".", fill = TRUE, comment.char = "#")
 
 mapData = tail(data, n=100)
@@ -91,6 +95,7 @@ ggplot(data, aes(x = Depth, y = Latitude)) +
   geom_point() + 
   coord_flip()
 ```
+
 ### Sismos por estaciones del año
 
 Primero mostramos la gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019.
@@ -155,7 +160,6 @@ ggplot(season_data, mapping = aes(x=year)) +
   geom_bar()
 ```
 
-Datos de precipitaciones fluviales
 Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros.
 
 Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
@@ -163,7 +167,7 @@ Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspond
 Se puede explorar el dataset de la siguiente forma:
 ```{r}
 # Importar dataset de lluvias mensuales
-prAmon <- t(read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets\ meteorológicos/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+prAmon <- t(read.csv("../Datasets meteorológicos/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
 colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
 prAmon <- prAmon[-1, ] # Extrae los datos
 
@@ -271,9 +275,8 @@ Para hacer una primera exploración de los resultados, se contó la cantidad de 
 Código utilizado para extraer los datos:
 
 ```{r}
-library(xlsx)
-source("/Users/jhonc/Workspace/data-mining/r_sismos_chile/src/cargar_sismos_con_region.r")
-source("/Users/jhonc/Workspace/data-mining/r_sismos_chile/src/cargar_etas.r")
+source("./cargar_sismos_con_region.r")
+source("./cargar_etas.r")
 
 cargar_sismos_con_region()
 
@@ -468,3 +471,6 @@ cargar_sismos_con_region <- function() {
 
 ```
 
+
+
+ 
