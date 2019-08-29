@@ -66,3 +66,31 @@ ggplot(cant_etas[cant_etas$Región == 5, ]) + # asociamos un data frame a ggplot
   #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
   ggtitle("Reportes de ETA anuales\npara la Región de Valparaíso") + # título
   xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+cant_etas_deshidratacion_2011 <- data.frame("Año"=eta2011[eta2011$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2012 <- data.frame("Año"=eta2012[eta2012$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2013 <- data.frame("Año"=eta2013[eta2013$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2014 <- data.frame("Año"=eta2014[eta2014$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2015 <- data.frame("Año"=eta2015[eta2015$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2016 <- data.frame("Año"=eta2016[eta2016$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo)
+cant_etas_deshidratacion_2017 <- data.frame("Año"=eta2017[eta2017$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo)
+
+cant_etas_deshidratacion <- rbind(cant_etas_deshidratacion_2011,
+                                  cant_etas_deshidratacion_2012,
+                                  cant_etas_deshidratacion_2013,
+                                  cant_etas_deshidratacion_2014,
+                                  cant_etas_deshidratacion_2015,
+                                  cant_etas_deshidratacion_2016,
+                                  cant_etas_deshidratacion_2017)
+
+ggplot(cant_etas[cant_etas_deshidratacion$Región == 1, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA por deshidratación anuales\npara la Región de Tarapacá") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+
+ggplot(cant_etas[cant_etas_deshidratacion$Región == 2, ]) + # asociamos un data frame a ggplot
+  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
+  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Reportes de ETA por deshidratación anuales\npara la Región de Antofagasta") + # título
+  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
