@@ -160,6 +160,8 @@ ggplot(season_data, mapping = aes(x=year)) +
   geom_bar()
 ```
 
+## Datos de precipitaciones fluviales
+
 Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros.
 
 Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
@@ -225,6 +227,12 @@ para estaciones de la Región de Arica y Parinacota") + # título
 
 Ahora sí se aprecia una diferencia respecto al norte y al sur. Sin embargo, lo más ilustrativo que se puede obtener es determinar las precipitaciones en cada mes del año. De la siguiente forma se extraen las precipitaciones mensuales para la región de Arica:
 ```{r}
+# Datos de arica:
+prAmon_na <- as.data.frame(prAmon_na)
+prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
+prAmonArica <- filter(prAmon_na, latitud <= -17.46 & latitud >= -19.07)
+
+# Clasificación por meses
 prAmonArica_ene <- prAmonArica %>% select(ends_with("01"))
 prAmonArica_ene <- apply(prAmonArica_ene, 2, function(x) as.numeric(as.character(x)))
 prAmonArica_feb <- prAmonArica %>% select(ends_with("02"))
@@ -280,9 +288,11 @@ de Arica y Parinacota respecto a cada mes\n") + # título
 ```
 
 
-Datos de temperaturas
+## Datos de temperaturas
+
 Los datos de temperaturas máximas, mínimas y medias fueron extraídos de la página del CR2, al igual que los datos de precipitaciones. Por esto, tienen la misma clasificación que ellos.
-Datos de salud alimentaria
+
+## Datos de salud alimentaria
 
 Los datos de salud alimentaria fueron extraídos de la página web del Departamento de Estadísticas e Información de Salud, en www.deis.cl.
 Se extrajeron datos de los brotes de enfermedades transmitidas por alimentos desde el año 2011 hasta el 2017, siendo estos todos los disponibles.
