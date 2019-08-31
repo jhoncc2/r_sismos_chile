@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 # Introducción
@@ -45,7 +45,7 @@ A continuación se mostrará una descripción de los datos que se van a utilizar
 IRIS Incorporated Research Institutions for Seismology
 Sus siglas en espanol Institutos de investigación corporativos de sismología. IRIS provee equipamiento y acceso sísmico y otros datos alrededor del mundo, cortesía una red sismógrafos de la comunidad científica  internacional y de Estados Unidos. IRIS provee accesos a datos sísmicos a través de servicios online. Siendo Chile uno de los paises con mas frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de la región de Chile dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación
 
-```{r map, echo=FALSE}
+```{r map, echo=FALSE, message=FALSE}
 # Carga de los datos e importacion de librerias
 library(ggplot2)
 library(dplyr)
@@ -100,7 +100,7 @@ ggplot(data, aes(x = Depth, y = Latitude)) +
 
 Primero mostramos la gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019.
 
-```{r}
+```{r, message=FALSE}
 # load libraries
 library(tidyverse)
 library(lubridate)
@@ -226,7 +226,7 @@ para estaciones de la Región de Arica y Parinacota") + # título
 
 
 Ahora sí se aprecia una diferencia respecto al norte y al sur. Sin embargo, lo más ilustrativo que se puede obtener es determinar las precipitaciones en cada mes del año. De la siguiente forma se extraen las precipitaciones mensuales para la región de Arica:
-```{r}
+```{r, message=FALSE}
 # Datos de arica:
 prAmon_na <- as.data.frame(prAmon_na)
 prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
@@ -299,13 +299,18 @@ Se extrajeron datos de los brotes de enfermedades transmitidas por alimentos des
 
 Para hacer una primera exploración de los resultados, se contó la cantidad de casos de enfermedades transmitidas por alimentos reportadas cada año para algunas regiones afectadas por terremotos grandes que ocurrieron en el periodo 2011-2017, aquellos de Iquique el año 2014 y de Illapel el año 2015.
 
-Código utilizado para extraer los datos:
+Para extraer los datos de esta parte, se utilizó el siguiente código.
 
-```{r}
+Se cargan los sismos con:
+```{r, results='hide'}
 source("./cargar_sismos_con_region.r")
 source("./cargar_etas.r")
 
 cargar_sismos_con_region()
+```
+
+Después, se guardan los datos en data frames:
+```{r}
 
 cant_etas_2011 <- data.frame("Año"=eta2011$Año.estadistico, "Región"=eta2011$Región.de.consumo,
                              "Cantidad"=eta2011$Región.de.consumo)
@@ -372,12 +377,26 @@ ggplot(cant_etas[cant_etas$Región == 5, ]) + # asociamos un data frame a ggplot
   xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
 
 cant_etas_deshidratacion_2011 <- data.frame("Año"=eta2011[eta2011$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo)
+
 cant_etas_deshidratacion_2012 <- data.frame("Año"=eta2012[eta2012$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo)
+
 cant_etas_deshidratacion_2013 <- data.frame("Año"=eta2013[eta2013$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo)
+
 cant_etas_deshidratacion_2014 <- data.frame("Año"=eta2014[eta2014$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo)
+
 cant_etas_deshidratacion_2015 <- data.frame("Año"=eta2015[eta2015$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo)
+
 cant_etas_deshidratacion_2016 <- data.frame("Año"=eta2016[eta2016$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo)
+
 cant_etas_deshidratacion_2017 <- data.frame("Año"=eta2017[eta2017$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo)
+
+cant_etas_deshidratacion_2011 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2011, function(a) {sum(a>0)})
+cant_etas_deshidratacion_2012 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2012, function(a) {sum(a>0)})
+cant_etas_deshidratacion_2013 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2013, function(a) {sum(a>0)})
+cant_etas_deshidratacion_2014 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2014, function(a) {sum(a>0)})
+cant_etas_deshidratacion_2015 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2015, function(a) {sum(a>0)})
+cant_etas_deshidratacion_2016 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2016, function(a) {sum(a>0)})
+cant_etas_deshidratacion_2017 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2017, function(a) {sum(a>0)})
 
 cant_etas_deshidratacion <- rbind(cant_etas_deshidratacion_2011,
                                   cant_etas_deshidratacion_2012,
@@ -400,7 +419,7 @@ ggplot(cant_etas[cant_etas_deshidratacion$Región == 2, ]) + # asociamos un data
   xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
 ```
 
-El código de carga de los datos corresponde a
+El código de carga de los datos corresponde a un mapeo de los datos sismológicos desde latitud hasta regipon
 ```{r}
 cargar_sismos_con_region <- function() {
   sismos <- read.csv("../Datasets sismológicos/files/all.csv",
