@@ -1,0 +1,11 @@
+---
+title: "Informe Hito 1: Trabajo con datos sismológicos"
+author: "Jhonny Cerezo, Pablo Elguer, Cristián Llull, Rodrigo Llull"
+date: "Septiembre 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
