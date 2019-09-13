@@ -169,7 +169,8 @@ Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspond
 Se puede explorar el dataset de la siguiente forma:
 ```{r}
 # Importar dataset de lluvias mensuales
-prAmon <- t(read.csv("../Datasets meteorológicos/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+prAmon <- t(read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+
 colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
 prAmon <- prAmon[-1, ] # Extrae los datos
 

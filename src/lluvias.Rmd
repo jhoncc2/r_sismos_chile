@@ -117,7 +117,7 @@ Ahora nos gustaría obtener el promedio de las lluvias de agosto, para Arica:
 ```{r}
 prAmon_na <- as.data.frame(prAmon_na)
 prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
-prAmonArica <- filter(prAmon_na, latitud <= -17.46 & latitud >= -19.07)
+prAmonArica <- filter(prAmon_na, prAmon_na$latitud <= -17.46 & prAmon_na$latitud >= -19.07)
 prAmonArica_agosto <- prAmonArica %>% select(ends_with("08"))
 #dim(prAmonArica_agosto) # 43 118
 data <- as.data.frame(prAmonArica_agosto[, ])
@@ -190,4 +190,35 @@ de Arica y Parinacota respecto a cada mes\n") + # título
   theme(axis.text.y = element_text(angle = 30, hjust = 1)) +
   xlab("Mes") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE)
 ```
+
+### Extracción de datasets para las diferentes regiones
+```{r}
+# Importar dataset de lluvias mensuales
+prAmon <- t(read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
+prAmon <- prAmon[-1, ] # Extrae los datos
+prAmon_na <- prAmon # Copia de prAmon
+prAmon_na[prAmon == -9999] <- NA # Todas las celdas con -9999 a NA
+prAmon_na <- as.data.frame(prAmon_na)
+prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
+
+prAmonArica       <- filter(prAmon_na, prAmon_na$latitud <= -17.46 & prAmon_na$latitud >= -19.07)
+prAmonTarapaca    <- filter(prAmon_na, prAmon_na$latitud < -19.07 & prAmon_na$latitud >= -21.47)
+prAmonAntofagasta <- filter(prAmon_na, prAmon_na$latitud < -21.47 & prAmon_na$latitud >= -25.87)
+prAmonAtacama     <- filter(prAmon_na, prAmon_na$latitud < -25.87 & prAmon_na$latitud >= -29.27)
+prAmonCoquimbo    <- filter(prAmon_na, prAmon_na$latitud < -29.27 & prAmon_na$latitud >= -32.10)
+prAmonValparaíso  <- filter(prAmon_na, prAmon_na$latitud < -32.10 & prAmon_na$latitud >= -33.13)
+prAmonMetropolitana <- filter(prAmon_na, prAmon_na$latitud < -33.13 & prAmon_na$latitud >= -34.07)
+prAmonOHiggins    <- filter(prAmon_na, prAmon_na$latitud < -34.07 & prAmon_na$latitud >= -34.82)
+prAmonMaule       <- filter(prAmon_na, prAmon_na$latitud < -34.82 & prAmon_na$latitud >= -36.27)
+prAmonNuble       <- filter(prAmon_na, prAmon_na$latitud < -36.27 & prAmon_na$latitud >= -36.65)
+prAmonBiobio      <- filter(prAmon_na, prAmon_na$latitud < -36.65 & prAmon_na$latitud >= -37.83)
+prAmonAraucania   <- filter(prAmon_na, prAmon_na$latitud < -37.83 & prAmon_na$latitud >= -39.45)
+prAmonLosRios     <- filter(prAmon_na, prAmon_na$latitud < -39.45 & prAmon_na$latitud >= -40.54)
+prAmonLosLagos    <- filter(prAmon_na, prAmon_na$latitud < -40.54 & prAmon_na$latitud >= -43.47)
+prAmonAysen       <- filter(prAmon_na, prAmon_na$latitud < -43.47 & prAmon_na$latitud >= -49.09)
+prAmonMagallanes  <- filter(prAmon_na, prAmon_na$latitud < -49.09 & prAmon_na$latitud >= -56.05)
+```
+
+
 
