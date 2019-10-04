@@ -1,0 +1,137 @@
+---
+title: "utils"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Juntando egresos dataset
+Este dataset presenta columnas diferentes en anios diferentes. First load the dataset 
+```{r cars}
+
+### url
+
+egr_2011 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2011.csv", sep=";", header=TRUE)
+egr_2012 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2012.csv", sep=";", header=TRUE)
+egr_2013 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2013.csv", sep=";", header=TRUE)
+egr_2014 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2014.csv", sep=";", header=TRUE)
+egr_2015 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2015.csv", sep=";", header=TRUE)
+egr_2016 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2016.csv", sep=";", header=TRUE)
+egr_2017 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2017.csv", sep=";", header=TRUE)
+egr_2018 <- read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/DatosEgresoHospitales/egr_2018.csv", sep=";", header=TRUE)
+
+### local
+egr_2011 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2011.csv", sep=";", header=TRUE)
+egr_2012 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2012.csv", sep=";", header=TRUE)
+egr_2013 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2013.csv", sep=";", header=TRUE)
+egr_2014 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2014.csv", sep=";", header=TRUE)
+egr_2015 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2015.csv", sep=";", header=TRUE)
+egr_2016 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2016.csv", sep=";", header=TRUE)
+egr_2017 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2017.csv", sep=";", header=TRUE)
+egr_2018 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets/egresoHospitales/egr_2018.csv", sep=";", header=TRUE)
+
+
+
+```
+
+Normalize information
+1) rename columns that have the same information but different headers.
+```{r}
+library(tidyverse)
+names(egr_2011)[names(egr_2011) == "DIAS_EST"] <- "DIAS_ESTAD"
+names(egr_2012)[names(egr_2012) == "DIAS_EST"] <- "DIAS_ESTAD"
+### renaming columns
+# for (data in dlist) {
+#   # print('jhello')
+#   names(data)[names(data) == "DIAS_ESTAD"] <- "DIAS_EST"
+# 
+#   ### TODO: complete ...
+# }
+
+dlist <- list (egr_2011, egr_2012, egr_2013, egr_2014, egr_2015, egr_2016, egr_2017, egr_2018)
+
+cols <- c('ESTAB', 'EDAD', 'COMUNA','FECHA_EGR', 'DIAS_ESTAD', 'REGION','DIAG1','DIAG2')
+l <- cols
+for (data in dlist) {
+  for (c in cols) {
+    if(c %in% colnames(data))
+    {
+    } else {
+      cat("missing !\n" , c);
+    }
+  }
+}
+
+print(unique(l)) 
+
+print(names(egr_2018))
+
+# define list to iterate
+
+egr_2012[cols]
+
+length(dlist)
+counter = 1
+flist <- list()
+for (data in dlist) {
+  flist[counter] <- data[cols]  
+  counter <- counter +1 
+}
+
+
+# summary(egr_2012)
+```
+
+##### merging y guardado de datos
+Ahora juatamos y guardamos los datos en un solo archivo. Note que si se quiere hacer un *preprocesamiento* de estos datos debe hacersce pervio este paso.
+
+```{r cars}
+
+bind_dataframes <- function(dataframe_list) {
+  initial <-  TRUE
+  res <- data.frame()
+  for (dataframe in dataframe_list) {
+    if  (isTRUE(initial)){
+      initial <-  FALSE
+      res <- dataframe
+    }
+    res <- merge(res,dataframe,all=TRUE,sort=FALSE)
+  }
+  res
+}
+
+egr_all <- bind_dataframes(dlist)
+```
+
+```{r}
+
+
+fastmerge <- function(d1, d2) {
+  d1.names <- names(d1)
+  d2.names <- names(d2)
+
+  # columns in d1 but not in d2
+  d2.add <- setdiff(d1.names, d2.names)
+
+  # columns in d2 but not in d1
+  d1.add <- setdiff(d2.names, d1.names)
+
+  # add blank columns to d2
+  if(length(d2.add) > 0) {
+    for(i in 1:length(d2.add)) {
+      d2[d2.add[i]] <- NA
+    }
+  }
+
+  # add blank columns to d1
+  if(length(d1.add) > 0) {
+    for(i in 1:length(d1.add)) {
+      d1[d1.add[i]] <- NA
+    }
+  }
+
+  return(rbind(d1, d2))
+}
+```
