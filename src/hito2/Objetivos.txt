@@ -1,0 +1,8 @@
+Objetivos:
+
+1. Terminar de limpiar los datos de egresos hospitalarios.
+2. Corregir el informe anterior.
+3. Migrar los datos a la nube.
+4. Unir datos de egresos hospitalarios por egreso y por región.
+5. Estudiar posibles correlaciones entre los nuevos datos (similar a lo que hicimos para el hito 1).
+6. En base al punto 5, estudiar si se puede generar un clasificador para predecir _cosas_ (o sismos, alguna enfermedad).
