@@ -56,11 +56,9 @@ cols <- c('ESTAB', 'EDAD', 'COMUNA','FECHA_EGR', 'DIAS_ESTAD', 'REGION','DIAG1',
 l <- cols
 for (data in dlist) {
   for (c in cols) {
-    if(c %in% colnames(data))
-    {
-    } else {
+    if (!(c %in% colnames(data))) {
       cat("missing !\n" , c);
-    }
+    } 
   }
 }
 
