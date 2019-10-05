@@ -127,7 +127,10 @@ prDaily_2008 <- put_regions(prDaily_2008)
 
 ```
 
-```{r}
+Finalmente, se convierte a formato .csv para poder trabajarlo.
 
+```{r}
+write.csv(prDaily_2008, "./prDaily_2008-2018.csv")
 ```
+
 
