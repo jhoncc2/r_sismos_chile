@@ -193,6 +193,8 @@ de Arica y Parinacota respecto a cada mes\n") + # título
 
 ### Extracción de datasets para las diferentes regiones
 ```{r}
+library(dplyr)
+
 # Importar dataset de lluvias mensuales
 prAmon <- t(read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
 colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
@@ -218,6 +220,17 @@ prAmonLosRios     <- filter(prAmon_na, prAmon_na$latitud < -39.45 & prAmon_na$la
 prAmonLosLagos    <- filter(prAmon_na, prAmon_na$latitud < -40.54 & prAmon_na$latitud >= -43.47)
 prAmonAysen       <- filter(prAmon_na, prAmon_na$latitud < -43.47 & prAmon_na$latitud >= -49.09)
 prAmonMagallanes  <- filter(prAmon_na, prAmon_na$latitud < -49.09 & prAmon_na$latitud >= -56.05)
+```
+
+```{r}
+# Armar columnas con los promedios de lluvias mensuales de cada región
+prAmonArica_ene <- prAmonArica %>% select(ends_with("01"))
+prAmonArica_ene <- apply(prAmonArica_ene, 2, function(x) as.numeric(as.character(x)))
+```
+
+```{r}
+# Armar columnas con los promedios de lluvias anuales de cada región
+
 ```
 
 
