@@ -1,6 +1,6 @@
 ---
 title: "Informe Hito 1: Trabajo con datos sismológicos"
-author: "Jhonny Cerezo, Pablo Elguer, Cristián Llull, Rodrigo Llull"
+author: "Jhonny Cerezo, Pablo Helguero, Cristián Llull, Rodrigo Llull"
 date: "Septiembre 2019"
 output:
   html_document:
