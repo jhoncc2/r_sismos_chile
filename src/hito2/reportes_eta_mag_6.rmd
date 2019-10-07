@@ -1,0 +1,84 @@
+---
+title: "Reportes de ETA por sismos desde magnitud 6"
+author: "Jhonny Cerezo, Pablo Elguer, Cristián Llull, Rodrigo Llull"
+date: "Octubre de 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Arial
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Carga de los datos
+
+Ahora los sismos vienen con las columnas _Year_, _Month_ y _Day_.
+```{r cargarSismos}
+sismos <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
+                     header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+```
+
+Los datos de ETA no vienen con esas columnas, pero se pueden generar.
+Quizás en el futuro las podamos guardar con las columnas generadas.
+
+```{r cargarEtas}
+# Carga de las ETAs
+etas <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
+                   header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+etas <- agregarFechasEtas(etas)
+```
+
+```{r elJoin}
+# Join de sismos con etas, analizaremos solo los mayores o iguales a 6 y entre el 2011 y 2017
+# Con esto se extraen las enfermedades que fueron reportadas en un mes en que hubo sismos mayores o iguales a 6 Mw
+sismosMayoresA6 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+sismos_y_etas <- merge(sismosMayoresA6, etas, by=c("Year", "Month"))
+```
+
+# Generación de gráficos
+
+A continuación se generan los gráficos para evaluar cómo varía la cantidad de reportes de ETAs por año según si el mes del reporte hubo algún sismo de magnitud mayor o igual a 6.
+
+```{r graficosReportes}
+library(ggplot2)
+
+cant_enfermedades <- data.frame("Year"=sismos_y_etas$Year, "Región"=sismos_y_etas$Región.de.consumo, "Cantidad"=sismos_y_etas$Región.de.consumo)
+cant_enfermedades <- aggregate(Cantidad ~ Year + Región, cant_enfermedades, FUN=function(a) {sum(a>-1)})
+
+ggplot(cant_enfermedades[cant_enfermedades$Región == 2, ]) +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  ggtitle("Reportes de ETA anuales\ntal que en el mismo mes hubo sismos\nde magnitud >= 6\npara la Región de Iquique") +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  xlab("Año") + ylab("Cantidad")
+
+ggplot(cant_enfermedades[cant_enfermedades$Región == 4, ]) +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  ggtitle("Reportes de ETA anuales\ntal que en el mismo mes hubo sismos\nde magnitud >= 6\npara la Región de Coquimbo") +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  xlab("Año") + ylab("Cantidad")
+```
+
