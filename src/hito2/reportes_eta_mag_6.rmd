@@ -153,6 +153,7 @@ graficarCantidadAnual(4)
 
 
 ```{r}
+# Magnitud 5, 7 días
 sismos_5 <- sismos[sismos$Magnitude >= 5 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
 datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
                     Profundidad = rep(0, nrow(sismos_5)),
@@ -177,7 +178,8 @@ write.csv(datos, "datos5_7d.csv", row.names=FALSE)
 
 
 ```{r}
-sismos_6 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+# Magnitud 6, 7 días
+sismos_5 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
 datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
                     Profundidad = rep(0, nrow(sismos_5)),
                     Region = rep(0, nrow(sismos_5)),
@@ -200,7 +202,8 @@ write.csv(datos, "datos6_7d.csv", row.names=FALSE)
 ```
 
 ```{r}
-sismos_7 <- sismos[sismos$Magnitude >= 7 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+# Magnitud 7, 7 días
+sismos_5 <- sismos[sismos$Magnitude >= 7 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
 datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
                     Profundidad = rep(0, nrow(sismos_5)),
                     Region = rep(0, nrow(sismos_5)),
@@ -220,5 +223,55 @@ for (i in 1:nrow(sismos_5)) {
   }
 }
 write.csv(datos, "datos7_7d.csv", row.names=FALSE)
+```
+
+
+```{r}
+# Magnitud 5, 14 días
+sismos_5 <- sismos[sismos$Magnitude >= 5 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_ant <- etas[el_sismo$num_date - 14/30/12 <= etas$num_date & etas$num_date <= el_sismo$num_date, ]
+  etas_post <- etas[el_sismo$num_date < etas$num_date & etas$num_date <= el_sismo$num_date + 14/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos5_14d.csv", row.names=FALSE)
+```
+
+```{r}
+# Magnitud 5, 7 días, ETAs por deshidratación
+sismos_5 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_desh <- etas[etas$Deshidratación == "SI", ]
+  etas_ant <- etas_desh[el_sismo$num_date - 7/30/12 <= etas_desh$num_date & etas_desh$num_date <= el_sismo$num_date, ]
+  etas_post <- etas_desh[el_sismo$num_date < etas_desh$num_date & etas_desh$num_date <= el_sismo$num_date + 7/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos5_7d_desh.csv", row.names=FALSE)
 ```
 
