@@ -7,6 +7,14 @@ output:
     toc: true
     toc_float: true
     theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Arial
+monofont: Liberation Mono
 ---
 
 ```{r setup, include=FALSE}
