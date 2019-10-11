@@ -20,10 +20,13 @@ import pydotplus
 
 def exportTreeImage(dtree, X, y, path):
     # Create dot data
-    dot_data = tree.export(dtree, out_file=None, filled=True,
+    dot_data = tree.export_graphviz(dtree, out_file=None,
+            filled=True,
             rounded=True, special_characters=True,
-            feature_names=X.columns,
-            class_names=y.target)
+            feature_names=X.columns.tolist(),
+            class_names=['Disminucióno','Aumento'])
+
+#            class_names=array(['Aumento'], dtype='<U10'))
 
     # Draw graph
     graph = pydotplus.graph_from_dot_data(dot_data)
@@ -32,7 +35,7 @@ def exportTreeImage(dtree, X, y, path):
     Image(graph.create_png())
 
     # Create PNG
-    grpah.write_png(path)
+    graph.write_png(path)
     
 #    dot_data = StringIO()
 #    export_graphviz(dtree, out_file=dot_data, filled=True,
@@ -72,10 +75,8 @@ for p in pruebas:
 
     tuned_parameters = {'criterion': ['gini','entropy'], 'max_depth': [1,3,5]} #Completar tuned_parameters
 
-    #Repetir el codigo de la seccion anterior con KNN pero ahora con decision tree
     score = 'precision'
 
-    #Construir aca el clf con GridSearch y luego entrenar
     clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
                            scoring=score)
     clf.fit(X_train, y_train)
