@@ -43,10 +43,7 @@ def generar_arbol(criterion, max_depth, score):
         if "Unnamed" in name:
             data.pop(name)
 
-    X = data[['Depth', 'Magnitude', 'Region_Arica_Parinacota', 'Region_Tarapaca', 'Region_Antofagasta', 'Region_Atacama',
-    'Region_Coquimbo', 'Region_Valparaiso', 'Region_Metropolitana_Santiago', 'Region_Libertador_General_OHiggins', 'Region_Maule',
-    'Region_Nuble', 'Region_Biobio', 'Region_Araucania', 'Region_Rios', 'Region_Lagos', 'Region_Aysen_General_Carlos_Ibanez',
-    'Region_Magallanes_Antartica']]      ## datos, caracteristicas o features de cada ¿Sismo?. 
+    X = data[['Depth', 'Magnitude']]      ## datos, caracteristicas o features de cada ¿Sismo?. 
     y = data['class']    ## ¿clase? para cada instancia anterior.
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
