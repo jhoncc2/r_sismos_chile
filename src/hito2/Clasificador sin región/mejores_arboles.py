@@ -52,4 +52,8 @@ generar_arbol("6_7d", 'gini', 3, 'precision')
 generar_arbol("7_7d", 'gini', 1, 'precision')
 
 
+# Optimizado para «accuracy»
+generar_arbol("5_7d", 'entropy', 5, 'accuracy')
+generar_arbol("6_7d", 'gini', 3, 'accuracy')
+generar_arbol("7_7d", 'gini', 1, 'accuracy')
 
