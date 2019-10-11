@@ -1,0 +1,80 @@
+---
+title: "vivienda"
+author: "Jhonny Cerezo, Pablo Elguer, Cristián Llull, Rodrigo Llull"
+date: "Octubre de 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Arial
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Estudio de los datos de vivienda
+Para evaluar las características de las viviendas, se consideraron los datos del censo efectuado el año 2017, debido a que no fue posible ubicar datasets para el año 2002.
+
+Lo primero que se hizo con los datos fue cambiar los títulos de columna en clave a nombres más comprensibles, de la forma:
+
+Clave | Nombre nuevo |
+----- | ------------ |
+P01 | TIPO (de construcción)
+P02 | ESTADO
+P03a | TIPO_CONSTR (tipo de construcción)
+P03b | TIPO_TECHO
+P03c | TIPO_SUELO
+P04 | CANT_PIEZAS (cantidad de piezas)
+P05 | ABAST_AGUA (tipo de abastecimiento de agua)
+
+De esta forma se podían trabajar mejor los datos.
+
+
+## Tipos de construcción por región estudiada
+
+```{r echo=FALSE}
+library(ggplot2)
+```
+
+```{r carga_viviendas}
+# Vargar las viviendas
+viviendas <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/Microdato_Censo2017-Viviendas.csv",
+                        header = TRUE, sep = ";", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+```
+
+```{r tipos}
+#tipos_region_2 <- aggregate(TIPO ~ REGION, viviendas, FUN=function(a) {sum(a>0)})
+ggplot(viviendas[viviendas$REGION == 2, ], aes(x=TIPO)) +
+  geom_histogram(binwidth=50)
+
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

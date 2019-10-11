@@ -34,7 +34,7 @@ prDaily_na <- prDaily # Copia de prAmon
 prDaily_na[prDaily == -9999] <- NA # Todas las celdas con -9999 a NA
 
 prDaily_na <- as.data.frame(prDaily_na)
-prDaily_na <- prDaily_na[-c(),]
+prDaily_na <- prDaily_na[-1,]
 ```
 
 Se debe ajustar a la cantidad de datos que necesitamos, por lo que procederemos a eliminar datos anteriores al año 2008.
@@ -53,8 +53,12 @@ Ahora se debe agregar la columna respectiva a su región, para poder compararla 
 put_regions <- function(dataFrame) {
   dataFrame$Region_Name <- NA
   dataFrame$Region_Number <- NA
-  for (i in 1:nrow(prDaily_2008)) {
+  for (i in 1:nrow(dataFrame)) {
     lat= dataFrame[i, "latitud"]
+    if (length(lat) == 0)
+    {
+      lat = dataFrame[i, "Latitude"]
+    }
     # Arica parte en -17.4605207
     if (lat > -19.074543) {
       dataFrame[i, "Region_Name"] <- "Región de Arica y Parinacota"
@@ -124,7 +128,6 @@ put_regions <- function(dataFrame) {
   return(dataFrame)
 }
 prDaily_2008 <- put_regions(prDaily_2008)
-
 ```
 
 Finalmente, se convierte a formato .csv para poder trabajarlo.
@@ -196,4 +199,104 @@ Finalmente, se convierte a formato .csv para poder trabajarlo.
 
 ```{r}
 write.csv(prDaily_2008, "./prDaily_with_means_2010-2018.csv")
+```
+
+Cargamos data de sismos
+
+```{r}
+dataSismo <- read.csv("sismos.csv", sep = ",", header = TRUE)
+dataSismo$Time <- substr(dataSismo$Time, 0, 10)
+dataSismo$Time <- as.Date(dataSismo$Time)
+# SismosDate <- data.frame(subset(dataSismo, select = c(EventID, Latitude, Longitude, Depth, MagType, Magnitude)), year = as.numeric(format(dataSismo$Time, format = "%Y")), month = as.numeric(format(dataSismo$Time, format = "%m")), day = as.numeric(format(dataSismo$Time, format = "%d")))
+dataSismo <- dataSismo[dataSismo$Year == 2008, ]
+dataSismo <- put_regions(dataSismo)
+
+library(dplyr)
+prDailyData <- prDaily_2008[, 13:3733]  # Los datos de lluvia, sin descripción
+prDailyData <- as.data.frame(prDailyData)  # De matrix a data.frame
+prDailyData[,] <- apply(prDailyData[,], 2, function(x) as.numeric(x)) # Valores de character a numeric
+# Precipitaciones diarias por año
+prDailyData08 <- prDailyData[,grep("2008-",colnames(prDailyData))]
+prDailyData09 <- prDailyData[,grep("2009-",colnames(prDailyData))]
+prDailyData10 <- prDailyData[,grep("2010-",colnames(prDailyData))]
+prDailyData11 <- prDailyData[,grep("2011-",colnames(prDailyData))]
+prDailyData12 <- prDailyData[,grep("2012-",colnames(prDailyData))]
+prDailyData13 <- prDailyData[,grep("2013-",colnames(prDailyData))]
+prDailyData14 <- prDailyData[,grep("2014-",colnames(prDailyData))]
+prDailyData15 <- prDailyData[,grep("2015-",colnames(prDailyData))]
+prDailyData16 <- prDailyData[,grep("2016-",colnames(prDailyData))]
+prDailyData17 <- prDailyData[,grep("2017-",colnames(prDailyData))]
+prDailyData18 <- prDailyData[,grep("2018-",colnames(prDailyData))]
+
+getMeanPerMonth <- function(DataFrame){
+  DataFrame$Enero <- NA
+  DataFrame$Febrero <- NA
+  DataFrame$Marzo <- NA
+  DataFrame$Abril <- NA
+  DataFrame$Mayo <- NA
+  DataFrame$Junio <- NA
+  DataFrame$Julio <- NA
+  DataFrame$Agosto <- NA
+  DataFrame$Septiembre <- NA
+  DataFrame$Octubre <- NA
+  DataFrame$Noviembre <- NA
+  DataFrame$Diciembre <- NA
+  for (i in 1:12) {
+    if (i > 9) {
+      cad <- paste("-", i, "-", sep = "")
+    }else{
+      cad <- paste("-0", i, "-", sep = "")
+    }
+    aux <- DataFrame[,grep(cad, colnames(DataFrame))]
+    aux <- rowMeans(aux, na.rm = TRUE)
+    if (i == 1) {
+      DataFrame["Enero"] <- aux
+    }
+    else if (i == 2) {
+      DataFrame["Febrero"] <- aux
+    }
+    else if (i == 3) {
+      DataFrame["Marzo"] <- aux
+    }
+    else if (i == 4) {
+      DataFrame["Abril"] <- aux
+    }
+    else if (i == 5) {
+      DataFrame["Mayo"] <- aux
+    }
+    else if (i == 6) {
+      DataFrame["Junio"] <- aux
+    }
+    else if (i == 7) {
+      DataFrame["Julio"] <- aux
+    }
+    else if (i == 8) {
+      DataFrame["Agosto"] <- aux
+    }
+    else if (i ==9) {
+      DataFrame["Septiembre"] <- aux
+    }
+    else if (i == 10) {
+      DataFrame["Octubre"] <- aux
+    }
+    else if (i == 11) {
+      DataFrame["Noviembre"] <- aux
+    }
+    else {
+      DataFrame["Diciembre"] <- aux
+    }
+  }
+  return (data.frame(subset(DataFrame, select = c(Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre,      Diciembre))))
+}
+prDailyData08 <- getMeanPerMonth(prDailyData08)
+prDailyData09 <- getMeanPerMonth(prDailyData09)
+prDailyData10 <- getMeanPerMonth(prDailyData10)
+prDailyData11 <- getMeanPerMonth(prDailyData11)
+prDailyData12 <- getMeanPerMonth(prDailyData12)
+prDailyData13 <- getMeanPerMonth(prDailyData13)
+prDailyData14 <- getMeanPerMonth(prDailyData14)
+prDailyData15 <- getMeanPerMonth(prDailyData15)
+prDailyData16 <- getMeanPerMonth(prDailyData16)
+prDailyData17 <- getMeanPerMonth(prDailyData17)
+prDailyData18 <- getMeanPerMonth(prDailyData18)
 ```

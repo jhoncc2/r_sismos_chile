@@ -1,0 +1,277 @@
+---
+title: "Reportes de ETA por sismos desde magnitud 6"
+author: "Jhonny Cerezo, Pablo Elguer, Cristián Llull, Rodrigo Llull"
+date: "Octubre de 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Arial
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Carga de los datos
+
+Ahora los sismos vienen con las columnas _Year_, _Month_ y _Day_.
+```{r cargarSismos}
+sismos <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
+                     header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+```
+
+Los datos de ETA no vienen con esas columnas, pero se pueden generar.
+Quizás en el futuro las podamos guardar con las columnas generadas.
+
+```{r cargarEtas}
+# Carga de las ETAs
+etas <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
+                   header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+etas <- agregarFechasEtas(etas)
+```
+
+```{r elJoin}
+# Join de sismos con etas, analizaremos solo los mayores o iguales a 6 y entre el 2011 y 2017
+# Con esto se extraen las enfermedades que fueron reportadas en un mes en que hubo sismos mayores o iguales a 6 Mw
+sismosMayoresA6 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+sismos_y_etas <- merge(sismosMayoresA6, etas, by=c("Year", "Month"))
+```
+
+# Generación de gráficos
+
+A continuación se generan los gráficos para evaluar cómo varía la cantidad de reportes de ETAs por año según si el mes del reporte hubo algún sismo de magnitud mayor o igual a 6.
+
+```{r graficosReportes}
+library(ggplot2)
+
+cant_enfermedades <- data.frame("Year"=sismos_y_etas$Year, "Región"=sismos_y_etas$Región.de.consumo, "Cantidad"=sismos_y_etas$Región.de.consumo)
+cant_enfermedades <- aggregate(Cantidad ~ Year + Región, cant_enfermedades, FUN=function(a) {sum(a>-1)})
+
+ggplot(cant_enfermedades[cant_enfermedades$Región == 2, ]) +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  ggtitle("Reportes de ETA anuales\ntal que en el mismo mes hubo sismos\nde magnitud >= 6\npara la Región de Iquique") +
+  xlab("Año") + ylab("Cantidad")
+
+ggplot(cant_enfermedades[cant_enfermedades$Región == 4, ]) +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  ggtitle("Reportes de ETA anuales\ntal que en el mismo mes hubo sismos\nde magnitud >= 6\npara la Región de Coquimbo") +
+  xlab("Año") + ylab("Cantidad")
+```
+
+
+
+```{r }
+sismos2011_2017 <- sismos[sismos$Year >= 2011 & sismos$Year <= 2017, ]
+sismos2011_2017_6 <- sismos2011_2017[sismos2011_2017$Magnitude >= 6, ]
+cant_sismos_mensuales_6 <- data.frame("Year"=sismos2011_2017_6$Year,
+                                      "Month"=sismos2011_2017_6$Month,
+                                      "Region"=sismos2011_2017_6$Region_Number,
+                                      "Cantidad"=sismos2011_2017_6$Region_Number)
+cant_sismos_mensuales_6 <- aggregate(Cantidad ~ Year + Month + Region, cant_sismos_mensuales_6, FUN=function(a) {sum(a > -1)})
+
+fechas_mensuales <- data.frame(num_date=cant_sismos_mensuales_6$Year +
+                                 (cant_sismos_mensuales_6$Month-1)/12)
+cant_sismos_mensuales_6 <- cbind(cant_sismos_mensuales_6, fechas_mensuales)
+
+ggplot(cant_sismos_mensuales_6[cant_sismos_mensuales_6$Year >= 2011 & cant_sismos_mensuales_6$Región == 2, ]) +
+  geom_bar(aes(x=num_date, y=Cantidad), stat="identity") +
+  ggtitle("Reportes de ETA por mes") +
+  xlab("Mes") + ylab("Cantidad") + xlim(c(2011, 2017))
+
+plot(cant_sismos_mensuales_6[cant_sismos_mensuales_6$Year >= 2011 & cant_sismos_mensuales_6$Región == 2, ]$num_date, cant_sismos_mensuales_6[cant_sismos_mensuales_6$Year >= 2011 & cant_sismos_mensuales_6$Región == 2, ]$Cantidad,
+     pch="*", xlim=c(2011, 2017), ylim=c(0, 100))
+```
+
+
+
+
+```{r}
+library(tidyverse)
+graficarCantidadAnual <- function(region_number) {
+  cant_meses_6 <- data.frame(Year <- c(rep(2011, 12),
+                                       rep(2012, 12),
+                                       rep(2013, 12),
+                                       rep(2014, 12),
+                                       rep(2015, 12),
+                                       rep(2016, 12),
+                                       rep(2017, 12)),
+                             Month <- rep(1:12, 7),
+                             Cantidad <- rep(0, 12*7))
+  colnames(cant_meses_6) <- c("Year", "Month", "Cantidad")
+  
+  for (year in 2011:2017) {
+    meses <- sismos2011_2017_6[sismos2011_2017_6$Year == year & sismos2011_2017_6$Region_Number == region_number, ]$Month
+    mes_anterior <- 0
+    for (mes in meses) {
+      if (mes != mes_anterior) {
+        mes_anterior <- mes
+        cant_meses_6[cant_meses_6$Year == year & cant_meses_6$Month == mes, ]$Cantidad <- 1
+      }
+    }
+  }
+  
+  #cant_meses_6 <- cant_meses_6 %>%
+  #  spread(key=Month, value=Cantidad)
+  
+  cant_anual_meses <- data.frame(Year <- 2011:2017, Cantidad <- rep(0, 7))
+  colnames(cant_anual_meses) <- c("Year", "Cantidad")
+  for (year in 2011:2017) {
+    cant_anual_meses[cant_anual_meses$Year == year, ]$Cantidad <- sum(cant_meses_6[cant_meses_6$Year == year, ]$Cantidad)
+  }
+  ggplot(cant_anual_meses) +
+  geom_bar(aes(x=Year, y=Cantidad), stat="identity") +
+  ggtitle("Cantidad de meses con sismos\nde magnitud mayor o igual a 6,\nRegión") +
+  xlab("Año") + ylab("Cantidad")
+}
+
+graficarCantidadAnual(2)
+graficarCantidadAnual(4)
+```
+
+
+
+```{r}
+# Magnitud 5, 7 días
+sismos_5 <- sismos[sismos$Magnitude >= 5 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_ant <- etas[el_sismo$num_date - 7/30/12 <= etas$num_date & etas$num_date <= el_sismo$num_date, ]
+  etas_post <- etas[el_sismo$num_date < etas$num_date & etas$num_date <= el_sismo$num_date + 7/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos5_7d.csv", row.names=FALSE)
+```
+
+
+```{r}
+# Magnitud 6, 7 días
+sismos_5 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_ant <- etas[el_sismo$num_date - 7/30/12 <= etas$num_date & etas$num_date <= el_sismo$num_date, ]
+  etas_post <- etas[el_sismo$num_date < etas$num_date & etas$num_date <= el_sismo$num_date + 7/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos6_7d.csv", row.names=FALSE)
+```
+
+```{r}
+# Magnitud 7, 7 días
+sismos_5 <- sismos[sismos$Magnitude >= 7 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_ant <- etas[el_sismo$num_date - 7/30/12 <= etas$num_date & etas$num_date <= el_sismo$num_date, ]
+  etas_post <- etas[el_sismo$num_date < etas$num_date & etas$num_date <= el_sismo$num_date + 7/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos7_7d.csv", row.names=FALSE)
+```
+
+
+```{r}
+# Magnitud 5, 14 días
+sismos_5 <- sismos[sismos$Magnitude >= 5 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_ant <- etas[el_sismo$num_date - 14/30/12 <= etas$num_date & etas$num_date <= el_sismo$num_date, ]
+  etas_post <- etas[el_sismo$num_date < etas$num_date & etas$num_date <= el_sismo$num_date + 14/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos5_14d.csv", row.names=FALSE)
+```
+
+```{r}
+# Magnitud 5, 7 días, ETAs por deshidratación
+sismos_5 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_desh <- etas[etas$Deshidratación == "SI", ]
+  etas_ant <- etas_desh[el_sismo$num_date - 7/30/12 <= etas_desh$num_date & etas_desh$num_date <= el_sismo$num_date, ]
+  etas_post <- etas_desh[el_sismo$num_date < etas_desh$num_date & etas_desh$num_date <= el_sismo$num_date + 7/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos5_7d_desh.csv", row.names=FALSE)
+```
+

@@ -1,12 +1,20 @@
 ---
 title: "Informe Hito 1: Trabajo con datos sismológicos"
-author: "Jhonny Cerezo, Pablo Elguer, Cristián Llull, Rodrigo Llull"
+author: "Jhonny Cerezo, Pablo Helguero, Cristián Llull, Rodrigo Llull"
 date: "Septiembre 2019"
 output:
   html_document:
     toc: true
     toc_float: true
     theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Arial
+monofont: Liberation Mono
 ---
 
 ```{r setup, include=FALSE}
