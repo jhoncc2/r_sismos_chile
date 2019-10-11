@@ -136,6 +136,71 @@ Finalmente, se convierte a formato .csv para poder trabajarlo.
 write.csv(prDaily_2008, "./prDaily_2008-2018.csv")
 ```
 
+
+Graficar las lluvias anualmente, para comparar con las enfermedades ETA:
+
+```{r}
+yearMeans <- function(dataset) {
+  #dataset <- apply(dataset, 2, function(x) as.numeric(as.data.frame(x)))
+  dataset <- apply(dataset, 2, function(x) as.numeric(as.character(x)))
+  dataset <- apply(dataset, 2, function(x) as.numeric(as.double(x)))
+  for (i in 2010:2018) {
+    dataset$i <- rowMeans(as.data.frame(dataset %>% select(starts_with(toString(i)))), na.rm = TRUE)
+  }
+}
+prDaily_prueba_2008 <- prDaily_2008
+
+prDaily_2010 <- prDaily_2008 %>% select(starts_with("2010"))
+prDaily_2010 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2010_mean" <- rowMeans(prDaily_2010, na.rm = TRUE)
+
+prDaily_2011 <- prDaily_prueba_2008 %>% select(starts_with("2011"))
+prDaily_2011 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2011_mean" <- rowMeans(prDaily_2011, na.rm = TRUE)
+
+prDaily_2012 <- prDaily_prueba_2008 %>% select(starts_with("2012"))
+prDaily_2012 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2012_mean" <- rowMeans(prDaily_2012, na.rm = TRUE)
+
+prDaily_2013 <- prDaily_prueba_2008 %>% select(starts_with("2013"))
+prDaily_2013 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2013_mean" <- rowMeans(prDaily_2013, na.rm = TRUE)
+
+prDaily_2014 <- prDaily_prueba_2008 %>% select(starts_with("2014"))
+prDaily_2014 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2014_mean" <- rowMeans(prDaily_2014, na.rm = TRUE)
+
+prDaily_2015 <- prDaily_prueba_2008 %>% select(starts_with("2015"))
+prDaily_2015 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2015_mean" <- rowMeans(prDaily_2015, na.rm = TRUE)
+
+prDaily_2016 <- prDaily_prueba_2008 %>% select(starts_with("2016"))
+prDaily_2016 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2016_mean" <- rowMeans(prDaily_2016, na.rm = TRUE)
+
+prDaily_2017 <- prDaily_prueba_2008 %>% select(starts_with("2017"))
+prDaily_2017 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2017_mean" <- rowMeans(prDaily_2017, na.rm = TRUE)
+
+prDaily_2018 <- prDaily_prueba_2008 %>% select(starts_with("2018"))
+prDaily_2018 <- apply(prDaily_2010, 2, function(x) as.numeric(as.character(x)))
+prDaily_2008$"2018_mean" <- rowMeans(prDaily_2018, na.rm = TRUE)
+
+#prDaily_prueba_2008 <- as.data.frame(prDaily_prueba_2008)
+#prDaily_prueba_2008 <- yearMeans(prDaily_2008)
+
+#prDaily_prueba_2008 <- apply(prDaily_prueba_2008, 2, function(x) as.numeric(as.character(x)))
+#prDaily_prueba_2008 %>% select(prDaily_prueba_2008, starts_with("2010"))
+#prDaily_prueba_2008$"2010_mean" <- rowMeans(prDaily_prueba_2008 %>% select(starts_with("2010")), na.rm = TRUE)
+
+```
+
+Finalmente, se convierte a formato .csv para poder trabajarlo.
+
+```{r}
+write.csv(prDaily_2008, "./prDaily_with_means_2010-2018.csv")
+```
+
 Cargamos data de sismos
 
 ```{r}
@@ -234,6 +299,4 @@ prDailyData15 <- getMeanPerMonth(prDailyData15)
 prDailyData16 <- getMeanPerMonth(prDailyData16)
 prDailyData17 <- getMeanPerMonth(prDailyData17)
 prDailyData18 <- getMeanPerMonth(prDailyData18)
-
-
 ```

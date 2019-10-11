@@ -7,13 +7,48 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 
+# Imports para el exportador de árbol
+from sklearn.externals.six import StringIO
+from IPython.display import Image
+from sklearn.tree import export_graphviz
+from sklearn import tree
+import pydotplus
+
+#import os
+#os.environ['PATH'] = os.environ['PATH'] + ';' + r"/home/cllullt/Documents/Universidad/Intro_Minería_de_datos/mineria_datos/bin/graphviz"
+
+
+def exportTreeImage(dtree, X, y, path):
+    # Create dot data
+    dot_data = tree.export(dtree, out_file=None, filled=True,
+            rounded=True, special_characters=True,
+            feature_names=X.columns,
+            class_names=y.target)
+
+    # Draw graph
+    graph = pydotplus.graph_from_dot_data(dot_data)
+
+    # Show graph
+    Image(graph.create_png())
+
+    # Create PNG
+    grpah.write_png(path)
+    
+#    dot_data = StringIO()
+#    export_graphviz(dtree, out_file=dot_data, filled=True,
+#            rounded=True, special_characters=True)
+#    graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+#    Image(graph.create_png())
+#    graph.write_png(path)
+
+
 pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
 
 for p in pruebas:
     print(type(p))
     X= pd.read_csv("X" + p + ".csv");
     y= pd.read_csv("y" + p + ".csv");
-
+    
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
 
     clf= DecisionTreeClassifier()
@@ -25,6 +60,12 @@ for p in pruebas:
 
     print(classification_report(y_test, y_pred))
 
+    # Supuestamente imprime atributos del árbol
+    print("Atributos del árbol en formato lista:")
+    print(clf.get_params())
+
+    # Exportar árbol
+    exportTreeImage(clf, X, y, p + ".png")
 
     print("Batería de tests")
     print()
