@@ -19,6 +19,9 @@ monofont: Liberation Mono
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(reticulate)
+use_python("/usr/bin/python3")
+library("bookdown")
 ```
 
 # Introducción
@@ -30,9 +33,15 @@ Resultados del primer estudio mostraron que la frecuencia de sismos en el Himala
 
 Por otro lado, un sismo también puede tener consecuencias, por lo que se decidió indagar si los sismos tienen un impacto en las enfermedades transmitidas por alimentos. El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
 
+Sin embargo, posterior a la exploración de los datos en el Hito 1, se decidió que la hipótesis a trabajar debía ser diferente a la trabajada anteriormente, porque los datos obtenidos sugerían que no habían relaciones claras entre los datos como para generar un predictor.
+
+Se añadió al conjunto de _dataset_ una base de datos de egresos hospitalarios, con el fin de direccionar la experimentación a hacia el aumento o la disminución de egresos hospitalarios y de enfermedades transmitidas por alimentos.
+
+
 ## Hipótesis
 
-De acuerdo a observaciones y trabajo previo en el área las siguientes hipótesis.
+### Hito 1 {#hipotesis-hito-1}
+Se tenían las siguientes hipótesis.
 
 **Configuración A:** Correlación entre clima y terremotos en Chile.
 
@@ -40,14 +49,33 @@ Esta configuración surge de la siguiente pregunta: ¿existirá una relación en
 Existe una correlación entre los cambios estacionales del año y la frecuencia de los terremotos.
 Existe una correlación entre precipitaciones fluviales y sismos o con sismos de gran magnitud.
 
+En base a las observaciones y trabajos con estos datos, se decidió que la cantidad de terremotos tenían más que nada cierta estacionalidad, independiente de las condiciones meteorológicas.
+Por esto, se descartó la predicción de cantidad de sismos en base a estos y se propuso su uso para la predicción de ingresos hospitalarios y/o enfermedades transmitidas por alimentos.
+
 **Configuracion B:** Correlación entre sismos y enfermedades transmitidas por alimentos en Chile.
 
 Esta configuración surge después de la pregunta si los terremotos presentan alguna correlación con la salud de los chilenos. En particular, si, debido a los daños en infraestructura que generan los terremotos se provoca un aumento en las enfermedades transmitidas por alimentos de los chilenos. Surgió la hipótesis:
 Existe una correlación entre las enfermedades transmitidas por alimentos y la ocurrencia de eventos sísmicos, en particular aquellos de mayor magnitud.
 
+Al finalizar la exploración y extraer más gráficos, se intuía que no se veían afectadas en mayor medida por los sismos, salvo por (probablemente) aquellas producidas por deshidratación.
+Por eso, se decidió conservar este dataset y trabajar en posibles métodos de predicción.
+
+
+### Hito 2
+
+En base a lo expuesto en la Sección \@ref(hipotesis-hito-1), se planteó una nueva hipótesis, para nuevas configuraciones:
+
+**Configuración A**: Correlación entre sismos y cantidad de egresos hospitalarios en Chile.
+
+Hipótesis: Los sismos inciden en la cantidad de ingresos hospitalarios por cada región.
+
+**Configuración B**: Correlación entre sismos y cantidad de reportes de enfermedades transmitidas por alimentos en Chile.
+
+Hipótesis: Los sismos inciden en la cantidad de enfermedades transmitidas por alimentos, particularmente por deshidratación (como se sugirió con los datos del Hito 1).
+
+
 ## Metodología
 Se busca juntar los datasets, como los de sismos, precipitaciones fluviales, temperatura y eventos de salud para buscar las correlaciones mencionadas más arriba. La forma de juntarlos sería mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron. De esta manera se encontrará la correlación entre los eventos planteados en para confirmar o rechazar las hipótesis.
-
 
 
 # Descripción de los datos
@@ -55,7 +83,7 @@ A continuación se mostrará una descripción de los datos que se van a utilizar
 
 ## Datos sismológicos
 IRIS Incorporated Research Institutions for Seismology
-Sus siglas en espanol Institutos de investigación corporativos de sismología. IRIS provee equipamiento y acceso sísmico y otros datos alrededor del mundo, cortesía una red sismógrafos de la comunidad científica  internacional y de Estados Unidos. IRIS provee accesos a datos sísmicos a través de servicios online. Siendo Chile uno de los paises con mas frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de la región de Chile dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación
+Sus siglas en español: Institutos de investigación corporativos de sismología. IRIS provee equipamiento y acceso sísmico y otros datos alrededor del mundo, cortesía una red sismógrafos de la comunidad científica  internacional y de Estados Unidos. IRIS provee accesos a datos sísmicos a través de servicios online. Siendo Chile uno de los paises con mas frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de la región de Chile dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación
 
 ```{r map, echo=FALSE, message=FALSE}
 # Carga de los datos e importacion de librerias
@@ -66,7 +94,7 @@ library(caret)
 library(dplyr)
 library(ggmap)
 
-data <- read.delim("../../Datasets sismológicos/files/all.csv", header = TRUE, sep = "|", quote = "\"",
+data <- read.delim("Datasets sismológicos/all.csv", header = TRUE, sep = "|", quote = "\"",
            dec = ".", fill = TRUE, comment.char = "#")
 
 mapData = tail(data, n=100)
@@ -81,9 +109,10 @@ sac_borders <- c(bottom  = min(mapData$Latitude)  - 0.1 * height,
 map <- get_stamenmap(sac_borders, zoom = 5, maptype = "toner-lite")
 ggmap(map) +
   geom_point(data = mapData, mapping = aes(x = Longitude, y = Latitude,
-        col = Magnitude, size = Depth)) +
+        col = Depth, size = Magnitude)) +
   scale_color_distiller(palette = "YlOrRd", direction = 1)
 ```
+
 Dentro de los datos que se utilizaran para el analysis estan: longitud, latitud, magnitud, profundidad, y tiempo
 Longitud y latitud son parte del sistema de coordenadas geográficas es un sistema que referencia cualquier punto de la superficie terrestre y que utiliza para ello dos coordenadas angulares, latitud (norte o sur) y longitud (este u oeste).
 Magnitud es una medida que tiene relación con la cantidad de energía liberada en forma de ondas.
@@ -181,7 +210,7 @@ Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspond
 Se puede explorar el dataset de la siguiente forma:
 ```{r}
 # Importar dataset de lluvias mensuales
-prAmon <- t(read.csv("https://users.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
+prAmon <- t(read.csv("https://anakena.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
 
 colnames(prAmon) <- as.character(unlist(prAmon[1, ])) # Le pone nombre a las columnas
 prAmon <- prAmon[-1, ] # Extrae los datos
@@ -220,7 +249,7 @@ prAmonMean_magallanes <- filter(prAmonMean, latitud < -49.10 & latitud >= -56)
 ```
 De esta manera, se obtienen los siguientes gráficos:
 
-```{r}
+```{r, echo=FALSE}
 
 ggplot(prAmonMean_magallanes) +
   geom_bar(aes(x = nombre_cuenca, y = mean), stat="identity") +
@@ -239,7 +268,7 @@ para estaciones de la Región de Arica y Parinacota") + # título
 
 
 Ahora sí se aprecia una diferencia respecto al norte y al sur. Sin embargo, lo más ilustrativo que se puede obtener es determinar las precipitaciones en cada mes del año. De la siguiente forma se extraen las precipitaciones mensuales para la región de Arica:
-```{r, message=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Datos de arica:
 prAmon_na <- as.data.frame(prAmon_na)
 prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
@@ -312,50 +341,50 @@ Se extrajeron datos de los brotes de enfermedades transmitidas por alimentos des
 
 Para hacer una primera exploración de los resultados, se contó la cantidad de casos de enfermedades transmitidas por alimentos reportadas cada año para algunas regiones afectadas por terremotos grandes que ocurrieron en el periodo 2011-2017, aquellos de Iquique el año 2014 y de Illapel el año 2015.
 
-Para extraer los datos de esta parte, se utilizó el siguiente código.
+Ahora, los sismos vienen con las columnas _Year_, _Month_ y _Day_, que fueron generados con una función similar a _agregarFechas_ que se encuentra en el anexo.
+También incluyen las regiones: estas fueron generadas mediante la función *cargar_sismos_por_region* que se encuentra en el anexo.
 
-Se cargan los sismos con:
-```{r, results='hide'}
-source("./cargar_sismos_con_region.r")
-source("./cargar_etas.r")
-
-cargar_sismos_con_region()
+```{r, echo=FALSE}
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
 ```
 
-Después, se guardan los datos en data frames:
-```{r}
+Se cargan los sismos con:
+```{r cargarSismos}
+sismos <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
+                     header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+```
 
-cant_etas_2011 <- data.frame("Año"=eta2011$Año.estadistico, "Región"=eta2011$Región.de.consumo,
-                             "Cantidad"=eta2011$Región.de.consumo)
+El código para las ETAs se simplificó mucho, logrando unir los 7 datasets de ETAs en 1.
+De esta manera, se cargan los datos de la forma:
 
-cant_etas_2012 <- data.frame("Año"=eta2012$Año.estadistico, "Región"=eta2012$Región.de.consumo,
-                             "Cantidad"=eta2012$Región.de.consumo)
+```{r cargarEtas}
+# Carga de las ETAs
+etas <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
+                   header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
 
-cant_etas_2013 <- data.frame("Año"=eta2013$Año.estadistico, "Región"=eta2013$Región.de.consumo,
-                             "Cantidad"=eta2013$Región.de.consumo)
+# Agregarle las fechas a las ETAs
+etas <- agregarFechasEtas(etas)
+```
 
-cant_etas_2014 <- data.frame("Año"=eta2014$Año.estadistico, "Región"=eta2014$Región.de.consumo,
-                             "Cantidad"=eta2014$Región.de.consumo)
 
-cant_etas_2015 <- data.frame("Año"=eta2015$Año.estadistico, "Región"=eta2015$Región.de.consumo,
-                             "Cantidad"=eta2015$Región.de.consumo)
+Después, se guardan los datos en data frames *cant_etas* y *cant_etas_deshidratacion*, para obtener los siguientes gráficos:
 
-cant_etas_2016 <- data.frame("Año"=eta2016$Año.estadistico, "Región"=eta2016$Región.de.consumo,
-                             "Cantidad"=eta2016$Región.de.consumo)
+```{r graficosETAs, echo=FALSE}
 
-cant_etas_2017 <- data.frame("Año"=eta2017$Año.estadistico, "Región"=eta2017$Región.de.consumo,
-                             "Cantidad"=eta2017$Región.de.consumo)
-
-cant_etas_2011 <- aggregate(Cantidad ~ Año + Región, cant_etas_2011, function(a) {sum(a>0)})
-cant_etas_2012 <- aggregate(Cantidad ~ Año + Región, cant_etas_2012, function(a) {sum(a>0)})
-cant_etas_2013 <- aggregate(Cantidad ~ Año + Región, cant_etas_2013, function(a) {sum(a>0)})
-cant_etas_2014 <- aggregate(Cantidad ~ Año + Región, cant_etas_2014, function(a) {sum(a>0)})
-cant_etas_2015 <- aggregate(Cantidad ~ Año + Región, cant_etas_2015, function(a) {sum(a>0)})
-cant_etas_2016 <- aggregate(Cantidad ~ Año + Región, cant_etas_2016, function(a) {sum(a>0)})
-cant_etas_2017 <- aggregate(Cantidad ~ Año + Región, cant_etas_2017, function(a) {sum(a>0)})
-
-cant_etas <- rbind(cant_etas_2011, cant_etas_2012, cant_etas_2013, cant_etas_2014,
-                   cant_etas_2015, cant_etas_2016, cant_etas_2017)
+cant_etas <- data.frame("Año"=etas$Año.estadistico, "Región"=etas$Región.de.consumo,
+                        "Cantidad"=etas$Región.de.consumo)
+cant_etas <- aggregate(Cantidad ~ Año + Región, cant_etas, function(a) {sum(a>0)})
 
 library(ggplot2)  # cargamos la librería
 
@@ -389,35 +418,12 @@ ggplot(cant_etas[cant_etas$Región == 5, ]) + # asociamos un data frame a ggplot
   ggtitle("Reportes de ETA anuales\npara la Región de Valparaíso") + # título
   xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
 
-cant_etas_deshidratacion_2011 <- data.frame("Año"=eta2011[eta2011$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2011[eta2011$Deshidratación == "SI", ]$Región.de.consumo)
+# Fase de graficar deshidratación
+cant_etas_deshidratacion <- data.frame("Año"=etas[etas$Deshidratación == "SI", ]$Año.estadistico,
+                                       "Región"=etas[etas$Deshidratación == "SI", ]$Región.de.consumo,
+                                       "Cantidad"=etas[etas$Deshidratación == "SI", ]$Región.de.consumo)
 
-cant_etas_deshidratacion_2012 <- data.frame("Año"=eta2012[eta2012$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2012[eta2012$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion_2013 <- data.frame("Año"=eta2013[eta2013$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2013[eta2013$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion_2014 <- data.frame("Año"=eta2014[eta2014$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2014[eta2014$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion_2015 <- data.frame("Año"=eta2015[eta2015$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2015[eta2015$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion_2016 <- data.frame("Año"=eta2016[eta2016$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2016[eta2016$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion_2017 <- data.frame("Año"=eta2017[eta2017$Deshidratación == "SI", ]$Año.estadistico, "Región"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo, "Cantidad"=eta2017[eta2017$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion_2011 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2011, function(a) {sum(a>0)})
-cant_etas_deshidratacion_2012 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2012, function(a) {sum(a>0)})
-cant_etas_deshidratacion_2013 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2013, function(a) {sum(a>0)})
-cant_etas_deshidratacion_2014 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2014, function(a) {sum(a>0)})
-cant_etas_deshidratacion_2015 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2015, function(a) {sum(a>0)})
-cant_etas_deshidratacion_2016 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2016, function(a) {sum(a>0)})
-cant_etas_deshidratacion_2017 <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion_2017, function(a) {sum(a>0)})
-
-cant_etas_deshidratacion <- rbind(cant_etas_deshidratacion_2011,
-                                  cant_etas_deshidratacion_2012,
-                                  cant_etas_deshidratacion_2013,
-                                  cant_etas_deshidratacion_2014,
-                                  cant_etas_deshidratacion_2015,
-                                  cant_etas_deshidratacion_2016,
-                                  cant_etas_deshidratacion_2017)
+cant_etas_deshidratacion <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion, function(a) {sum(a>0)})
 
 ggplot(cant_etas[cant_etas_deshidratacion$Región == 1, ]) + # asociamos un data frame a ggplot
   geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
@@ -432,8 +438,152 @@ ggplot(cant_etas[cant_etas_deshidratacion$Región == 2, ]) + # asociamos un data
   xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
 ```
 
-El código de carga de los datos corresponde a un mapeo de los datos sismológicos desde latitud hasta regipon
+
+# Pre-procesamiento de los datos
+
+Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos de alta magnitud y los informes de ETA.
+Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw.
+
+Además, de la misma forma como se hizo en la Exploración de los datos, se clasificaron los sismos por Región de Chile.
+De esta manera, se construyó un dataset que tuviera todos los eventos sismológicos disponibles, clasificados por fecha. 
+
+
+# Limpieza de los datos
+
+La limpieza de los datos se realizó eliminando aquellas columnas que no representan un verdadero aporte para los casos de estudio.
+Para ello, se seleccionaron los atributos de Magnitud, profundidad y región.
+
+De esta forma, se eliminaron todos los otros atributos, dejando datasets más limpios y cómodos de trabajar, en especial para entrenar el clasificador.
+
+El código que genera un archivo .csv con estos nuevos datos, se puede ver aquí:
 ```{r}
+# Magnitud 6, 7 días
+sismos_5 <- sismos[sismos$Magnitude >= 6 & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+datos <- data.frame(Magnitud = rep(0, nrow(sismos_5)),
+                    Profundidad = rep(0, nrow(sismos_5)),
+                    Region = rep(0, nrow(sismos_5)),
+                    Aumento = rep(0, nrow(sismos_5)))
+for (i in 1:nrow(sismos_5)) {
+  el_sismo <- sismos_5[i, ]
+  etas_ant <- etas[el_sismo$num_date - 7/30/12 <= etas$num_date & etas$num_date <= el_sismo$num_date, ]
+  etas_post <- etas[el_sismo$num_date < etas$num_date & etas$num_date <= el_sismo$num_date + 7/30/12, ]
+  dif <- nrow(etas_post) - nrow(etas_ant)
+  
+  datos[i, ]$Magnitud <- el_sismo$Magnitude
+  datos[i, ]$Profundidad <- el_sismo$Depth
+  datos[i, ]$Region <- el_sismo$Region_Number
+  
+  if (dif > 0) {
+    datos[i, ]$Aumento <- 1
+  }
+}
+write.csv(datos, "datos6_7d.csv", row.names=FALSE)
+```
+Aquí, puede apreciarse uno de los datasets, en este caso, para sismos de magnitud mayor o igual a 6 Mw y con un período de informes 7 días posterior al sismo y 7 días anterior a este.
+
+Para obtener las ETAs correctas, se realizó la suma de los 7 días anteriores y 7 días posteriores, y se almacenó en una variable.
+Ya se analizará la decisión de esto.
+
+
+# Minería de datos
+
+Dada la estructura de los datos, se diseñó un clasificador DecisionTree.
+Así, se podrían identificar los atributos que el clasificador pudiera considerar importantes para hacer la predicción.
+
+## Diseño experimental
+
+Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
+Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
+Además, se debió agregar la dimensión de temporalidad tan necesaria para apreciar estos datos.
+
+De esta manera, se pensó en lo siguiente: si en los _n_ días antes del sismo se registraron menos informes por ETA que en los _n_ días después, quiere decir que el sismo aumentó los informes y por ende los daños. Esto se representa con un 1.
+Por otro lado, si ocurre al revés, es un cero.
+
+De esta forma, se generó la tabla cuyo código se encuentra en la sección anterior.
+
+Luego, se realizó el árbol de decisión.
+El experimento consistió en generar un GridSearchCV de DecisionTree para criterios criterion gini y entropy, mientras que con una profundidad máxima de entre 1, 3 y 5 para los árboles generados.
+
+Esto se realizó en Python 3 mediante la librería `sklearn`.
+Se generaron archivos de texto que almacenaran los resultados para los distintos árboles.
+
+![Imagen de cómo se calculó _aumento_](Imágenes/aumento.jpg)
+
+## Resultados
+
+Luego, los resultados de ese experimento se utilizaron para graficar los mejores árboles de decisión, que fueron:
+
+Oprimizando el atributo precision:
+
+Para magnitud 5, 7 días: criteiron gini y profundidad 1.
+
+Para magnitud 6, 7 días: criteiron gini y profundidad 3.
+
+Para magnitud 7, 7 días: criterion gini y profundidad 1.
+
+Optimizando el atributo de accuracy:
+
+Para magnitud 5, 7 días: criterion entropy y profundidad 5.
+
+Los otros 2 quedaron igual.
+
+Se observó que los resultados para 5, en el primer caso quedó subajustado y en el segundo, sobreajustado.
+Por otro lado, se obtuvo que en ambos casos el de 7 quedó sobreajustado.
+Los mejores resultados se observaron para magintud 6, 7 días.
+
+Los resultados se pueden apreciar en las siguientes imágenes de los árboles generados, para los mejores resultados de optimizar la precisión.
+
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5](Clasificador sin región/5_7dprecision.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 6](Clasificador sin región/6_7dprecision.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 7](Clasificador sin región/7_7dprecision.png)
+
+
+# Consideraciones de comentarios
+
+
+## Comentarios del cuerpo docente
+
+El siguiente comentario resultó de mucha utilidad para el correcto desarrollo de la iteración 2:
+*«También se debe evaluar si los datos con los que cuenta el grupo son suficientes para responder preguntas interesantes de investigación o validar las hipótesis planteadas.
+De lo contrario se debe considerar agregar más datos, inclusive de otras fuentes o cambiar de dataset por completo».*
+
+Este comentario incentivó el que como grupo buscáramos nuevos datasets, puesto que nos dimos cuenta que los datos utilizados **no eran suficientes** para, principalmente, responder preguntas interesantes.
+Se buscaron nuevos datasets, encontrándose el de egresos hospitalarios, de tal forma de contestar nuevas preguntas.
+Este dataset, al estar relacionado con la salud, se pudo complementar con el de enfermedades transmitidas por alimentos que ya se tenía.
+
+
+## Comentarios de los compañeros
+
+Hubo un comentario en el apartado _Hipótesis/Problemáticas iniciales_:
+*«No queda claro cómo se van a juntar todos los datasets (...), cómo pueden relacionar las enfermedades con el agua y sismos».*
+
+Este comentario ayudó al grupo a darse cuenta que los datos de enfermedades transmitidas por alimentos tenían un potencial para ser trabajados, por lo que se decidió buscar más datos relacionados con problemas de salud posiblemente asociada a los terremotos, con lo que se encontró el dataset de egresos hospitalarios.
+
+En general, los otros comentarios fueron con respecto a la calidad de la presentación, por lo que intentamos mejorarla, por ejemplo subiendo el tono y practicando previamente.
+Sin embargo, al momento de la presentación jugaron algunos papeles de nerviosismo y probablemente mucho cansancio, que nos jugaron en contra.
+
+# Anexo
+
+```{r agregarFechas}
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+```
+
+El código de carga de los datos de sismos con región corresponde a un mapeo de los datos sismológicos desde latitud hasta región.
+```{r cargarSismosConRegion}
 cargar_sismos_con_region <- function() {
   sismos <- read.csv("../Datasets sismológicos/files/all.csv",
                      header=TRUE, sep="|", quote="\"", dec=".", fill=TRUE, comment.char="#")
@@ -530,6 +680,76 @@ cargar_sismos_con_region <- function() {
 
 ```
 
+Código que genera los árboles de decisión y entrega su _feedback_.
+
+```{python, eval=FALSE}
+import numpy as np
+import pandas as pd
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+
+
+pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
+
+
+for p in pruebas:
+    print(type(p))
+    X= pd.read_csv("X" + p + ".csv");
+    y= pd.read_csv("y" + p + ".csv");
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
+    
+    print("Batería de tests: " + p)
+    print()
+
+    tuned_parameters = {'criterion': ['gini','entropy'], 'max_depth': [1,3,5]}
+
+    score = 'precision'
+    clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
+                           scoring=score)
+    clf.fit(X_train, y_train)
+    print("#####################################################") 
+    print("Mejor combinación de parámetros para atributo " + score)
+    print(clf.best_params_)
+    y_true, y_pred = y_test, clf.predict(X_test)
+    print(classification_report(y_true, y_pred))
+    print()
+    print("#####################################################") 
+    print()
+
+
+    score = 'accuracy'
+    clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
+                           scoring=score)
+    clf.fit(X_train, y_train)
+    print("#####################################################") 
+    print("Mejor combinación de parámetros para atributo " + score)
+    print(clf.best_params_)
+    y_true, y_pred = y_test, clf.predict(X_test)
+    print(classification_report(y_true, y_pred))
+    print()
+    print("#####################################################") 
+    print()
+
+
+    score = 'recall'
+    clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
+                           scoring=score)
+    clf.fit(X_train, y_train)
+    print("#####################################################") 
+    print("Mejor combinación de parámetros para atributo " + score)
+    print(clf.best_params_)
+    y_true, y_pred = y_test, clf.predict(X_test)
+    print(classification_report(y_true, y_pred))
+    print()
+    print("#####################################################") 
+    print()
+
+```
 
 
  

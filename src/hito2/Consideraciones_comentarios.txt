@@ -1,0 +1,23 @@
+# Consideraciones de comentarios
+
+
+## Comentarios del cuerpo docente
+
+El siguiente comentario resultó de mucha utilidad para el correcto desarrollo de la iteración 2:
+*«También se debe evaluar si los datos con los que cuenta el grupo son suficientes para responder preguntas interesantes de investigación o validar las hipótesis planteadas.
+De lo contrario se debe considerar agregar más datos, inclusive de otras fuentes o cambiar de dataset por completo».*
+
+Este comentario incentivó el que como grupo buscáramos nuevos datasets, puesto que nos dimos cuenta que los datos utilizados **no eran suficientes** para, principalmente, responder preguntas interesantes.
+Se buscaron nuevos datasets, encontrándose el de egresos hospitalarios, de tal forma de contestar nuevas preguntas.
+Este dataset, al estar relacionado con la salud, se pudo complementar con el de enfermedades transmitidas por alimentos que ya se tenía.
+
+
+## Comentarios de los compañeros
+
+Hubo un comentario en el apartado _Hipótesis/Problemáticas iniciales_:
+*«No queda claro cómo se van a juntar todos los datasets (...), cómo pueden relacionar las enfermedades con el agua y sismos».*
+
+Este comentario ayudó al grupo a darse cuenta que los datos de enfermedades transmitidas por alimentos tenían un potencial para ser trabajados, por lo que se decidió buscar más datos relacionados con problemas de salud posiblemente asociada a los terremotos, con lo que se encontró el dataset de egresos hospitalarios.
+
+En general, los otros comentarios fueron con respecto a la calidad de la presentación, por lo que intentamos mejorarla, por ejemplo subiendo el tono y practicando previamente.
+Sin embargo, al momento de la presentación jugaron algunos papeles de nerviosismo y probablemente mucho cansancio, que nos jugaron en contra.

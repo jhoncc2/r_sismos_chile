@@ -25,7 +25,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Ahora los sismos vienen con las columnas _Year_, _Month_ y _Day_.
 ```{r cargarSismos}
-sismos <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
+sismos <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
                      header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
 ```
 
@@ -34,7 +34,7 @@ Quizás en el futuro las podamos guardar con las columnas generadas.
 
 ```{r cargarEtas}
 # Carga de las ETAs
-etas <- read.delim("http://users.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
+etas <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
                    header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
 
 # Agregarle las fechas a las ETAs
