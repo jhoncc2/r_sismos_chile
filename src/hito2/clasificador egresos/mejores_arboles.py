@@ -35,25 +35,26 @@ def exportTreeImage(dtree, X, y, path):
     graph.write_png(path)
 
 
-def generar_arbol(prueba, criterion, max_depth, score):
-    X= pd.read_csv("X" + prueba + ".csv");
-    y= pd.read_csv("y" + prueba + ".csv");
+def generar_arbol(criterion, max_depth, score):
+    testSismos = 'https://users.dcc.uchile.cl/~phelguer/IntroMineria/SismosClasificador.csv'
+    data = pd.read_csv(testSismos)  # abrimos el archivo csv y lo cargamos en data.
+    names = list(data)
+    for name in names:
+        if "Unnamed" in name:
+            data.pop(name)
+
+    X = data[['Depth', 'Magnitude']]      ## datos, caracteristicas o features de cada ¿Sismo?. 
+    y = data['class']    ## ¿clase? para cada instancia anterior.
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
 
     clf = DecisionTreeClassifier(criterion=criterion, max_depth=max_depth)
     clf.fit(X_train, y_train)
 
-    exportTreeImage(clf, X, y, prueba + score + ".png")
+    exportTreeImage(clf, X, y, str(max_depth) + score + ".png")
 
 
 # Optimizado para «precision»
-generar_arbol("5_7d", 'gini', 1, 'precision')
-generar_arbol("6_7d", 'gini', 3, 'precision')
-generar_arbol("7_7d", 'gini', 1, 'precision')
-
-
-# Optimizado para «accuracy»
-generar_arbol("5_7d", 'entropy', 5, 'accuracy')
-generar_arbol("6_7d", 'gini', 3, 'accuracy')
-generar_arbol("7_7d", 'gini', 1, 'accuracy')
-
+generar_arbol('gini', 1, 'precision')
+generar_arbol('gini', 3, 'precision')
+generar_arbol('gini', 4, 'precision')
