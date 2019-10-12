@@ -439,6 +439,144 @@ ggplot(cant_etas[cant_etas_deshidratacion$Región == 2, ]) + # asociamos un data
 ```
 
 
+
+## Datos Sismológicos e Ingresos de pacientes a Hospitales 
+Por apreciación veremos que los datos de ingresos de pacientes a centros hospitalarios incrementa cuando ocurren un evento sísmico. Comprobemos esto, el siguiente gráfico muestra la frecuencia de sismos en las regiones de Chile desde 2008 al 2018. Por legibilidad nos referiremos a ingresos de personas a centros hospitalarios como ICH desde ahora.
+
+```{r}
+library(ggplot2)
+#### code to use python ####
+# library(reticulate)
+# use_python("/usr/bin/python3")
+#### end code to use python ####
+
+## load dataset of sismos
+data <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/sismos_cleaned2.csv")
+## query important sisms
+sis_gt4 <- data[data$Magnitude >= 4 & data$year >= 2008 & data$year <= 2018, ]
+
+ggplot(sis_gt4, aes(Magnitude)) + 
+  # geom_col(position="dodge", stat="identity") 
+  geom_bar() +
+  facet_grid(year ~ Region_Number)
+```
+
+
+Vemos que los casos más notables de entre sismos y regiones se localizan entre las regiones 0 a 4, manteniéndose constante durante los años considerados. También podemos notar el caso especial de la región 13 el año 2010 y las regiones de 6 a la 9 también en el mismo año.
+
+
+Consideremos para este analysis 3 casos en regiones 7ma en 2010, 1ra en 2014 y 4ta en 2015.
+
+```{r}
+library(dplyr)
+
+
+sis_10 <- with(sis_gt4, sis_gt4[Region_Number == 7 & year == 2010,])
+sis_14 <- with(sis_gt4, sis_gt4[Region_Number == 1 & year == 2014,])
+sis_15 <- with(sis_gt4, sis_gt4[Region_Number == 4 & year == 2015,])
+
+egr_2010 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2010.csv", sep=",", header=TRUE)
+egr_2014 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2014.csv", sep=",", header=TRUE)
+egr_2015 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2015.csv", sep=",", header=TRUE)
+
+ing_reg_10 <- egr_2010[egr_2010$REGION == 7,]
+ing_reg_14 <- egr_2014[egr_2014$REGION == 1,]
+ing_reg_15 <- egr_2015[egr_2015$REGION == 4,]
+
+## joined table
+j_10 <- left_join(sis_10, ing_reg_10, by = c("number_days"))
+j_14 <- left_join(sis_14, ing_reg_14, by = c("number_days"))
+j_15 <- left_join(sis_15, ing_reg_15, by = c("number_days"))
+
+col_list <- c('Depth', 'Magnitude', 'Latitude', 'Longitude', 'COMUNA','n')
+
+j_10 <- j_10 %>%
+  group_by(.dots=c("Latitude","Magnitude","COMUNA")) %>%
+  add_tally()
+
+j_14 <- j_14 %>%
+  group_by(.dots=c("Latitude","Magnitude","COMUNA")) %>%
+  add_tally()
+
+j_15 <- j_15 %>%
+  group_by(.dots=c("Latitude","Magnitude","COMUNA")) %>%
+  add_tally()
+
+# 
+```
+
+### Numero de cluster optimos 
+En el siguiente gráfico mostramos los distintos valores del hiper-parámetro k en clustering para el grupo de datos seleccionados previamente. Note que para las regiones 7ma y 4ta estas tienen un descenso rápido con k=2, no sucede lo mismo en la primera región (segunda gráfica). Sin embargo todos presentan mejora con el valor k=3. Entonces definimos que k=3 es el número óptimo de clusters para todos los casos.
+```{r}
+library(ggplot2, gridExtra)
+library(cluster)
+require(gridExtra)
+library(cowplot)
+################ kmeans 
+set.seed(2)
+# clusters <- kmeans(j_10[col_list], 5)
+clust = 15 # graficaremos hasta 15 clusters
+
+elbow_fun <- function (data) {
+  wss <- 0
+  for (i in 1:clust){
+    wss[i] <-
+      sum(kmeans(data, centers=i)$withinss)
+  }
+  wss
+}
+
+wss1 <- elbow_fun(j_10[col_list])
+wss2 <- elbow_fun(j_14[!is.na(j_14$COMUNA),col_list])
+wss3 <- elbow_fun(j_15[col_list])
+
+# d <-data.frame(value=wss1)
+# ggplot(d, aes(x=value)) +
+#   geom_freqpoly()
+
+par(mfrow=c(2,2))
+p1 <- plot(1:clust, wss1, type="b", xlab="Numero de clusters (7ma Region) ", ylab="wss")
+p2 <- plot(1:clust, wss2, type="b", xlab="Numero de clusters (1ra Region)", ylab="wss")
+p3 <- plot(1:clust, wss3, type="b", xlab="Numero de clusters (4ta Region)", ylab="wss")
+
+# plot_grid(p1, p2, p3)
+```
+### Graficos de Correlacion y clustering
+El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 3. Note que para todos los casos, 'n' representa el numero de ICH de un sismo en una fecha determinada.
+```{r}
+d_10 <- j_10[col_list]
+fit <- kmeans(d_10, 3)
+pairs(d_10, col=fit$cluster)
+# plot(fit[], main="Resultados usando k = 2", xlab="", ylab="")
+
+# clusplot(j_10, fit$cluster, color=TRUE, shade=TRUE,
+   # labels=2, lines=0)
+
+```
+A primera vista se puede apreciar que el cluster muestra las comunas que mas ICH reciben. Tambien que a menor profundidad mayor ICH. En cambio mayor magnitud no representa un notable incremento en el numero de ICH.
+
+El siguiente gráfico muestra la matriz de cluster y correlación de la 1ra región en el año 2014, con k = 3.
+```{r}
+# summary(d_14)
+## OMITIMOS DATOS QUE NO TIENEN COMUNA
+d_14 <- j_14[!is.na(j_14$COMUNA), col_list]
+fit <- kmeans(d_14, 3)
+pairs(d_14, col=fit$cluster)
+```
+De manera similar al gráfico de la 7ma estación, se puede apreciar la cantidad de ICH en comunas de la 1ra región. También muestra una correlación de menor profundidad a incremento de ICH. Y una vez más que no existe relación notable entre magnitud e ICH.
+
+El siguiente gráfico muestra la matriz de cluster y correlación de la 4ta región en el año 2015, con k=3
+
+```{r}
+d_15 <- j_15[col_list]
+fit <- kmeans(d_15, 3)
+pairs(d_15, col=fit$cluster)
+```
+Podemos apreciar los mismos casos que en gráficos anteriores, 7ma y 1ra region. Los resultados ahora mostrados son más dispersos en el valor de ICH. Note que estos datos fueron escogidos por el terremoto en Coquimbo (4ta región) en 16 de Septiembre de 2015 con 8,4 de magnitud, además de ser una de las regiones de Chile con más actividad sísmica.
+
+Al no existir una correlación entre ICHs y sismos nos hace pensar en factores externos que puedan influir a CHIs. Existe una correlación entre la profundidad y ICHs, aunque esta relación no descarta a otros factores externos que influyan en el número de ICHs. Sin embargo veremos si existe la relación necesaria para poder crear un clasificador binario que nos permita saber que regiones requieren más atención ante un terremoto tomando en cuenta el número de ICHs.
+
+
 # Pre-procesamiento de los datos
 
 Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos de alta magnitud y los informes de ETA.
@@ -492,6 +630,7 @@ Así, se podrían identificar los atributos que el clasificador pudiera consider
 
 ## Diseño experimental
 
+### Enfermedades de Transmisión alimentaria
 Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
 Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
 Además, se debió agregar la dimensión de temporalidad tan necesaria para apreciar estos datos.
@@ -509,7 +648,24 @@ Se generaron archivos de texto que almacenaran los resultados para los distintos
 
 ![Imagen de cómo se calculó _aumento_](Imágenes/aumento.jpg)
 
+
+### Ingresos a Hospitales
+Los *datos* considerados para la tarea de clasificación son: Magnitud, Profundidad y las regiones, esta última utilizada de manera categórica (como nuevas columnas del dataset). Los datos son a partir del 2008, considerando las 16 regiones de chile. Contamos el incremento de ICHs por cada evento sísmico. Por último señalamos si existe incremento o decremento en la cantidad de ICHs por evento sismico en la Región, con la intuición de si el sismo tuvo impacto en la población.
+
+Para la *implementacion* se utilizo python y la librería Sklearn para crear los modelos. Entrenamos los datos utilizando la técnica Hold-out, donde dividimos el dataset en training y test, 70% y 30%. Entrenamos 20 a 100 veces los modelos y comparamos la media de los resultados obtenidos en las métricas de Precisión, Recall y F1.
+
+La imagen de abajo representa a un árbol de profundidad 1 utilizando el algoritmo DecisionTree. Cuando el árbol tiene una profundidad 1 el criterio de clasificación es la profundidad, lo cual representa la predominancia de este atributo para la predicción, igual como se mostró en el análisis de los datos.
+
+![Resultado del algoritmo DesicionTree con profundidad 1 ](/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/clasificador egresos/1precision.png)
+
+![Resultado del algoritmo DesicionTree con profundidad 3 ](/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/clasificador egresos/3precision.png)
+
+
+
+
 ## Resultados
+
+### Classificador Enfermendad de Transmision Alimentaria
 
 Luego, los resultados de ese experimento se utilizaron para graficar los mejores árboles de decisión, que fueron:
 
@@ -539,6 +695,22 @@ Los resultados se pueden apreciar en las siguientes imágenes de los árboles ge
 ![Árbol de decisión generado para sismos de magnitud mayor o igual a 6](Clasificador sin región/6_7dprecision.png)
 
 ![Árbol de decisión generado para sismos de magnitud mayor o igual a 7](Clasificador sin región/7_7dprecision.png)
+
+
+
+### Classificador Ingresos a Hospitales
+
+En este modelo se probaron los clasificadores de Dummy, DecisionTree, NaiveBayes y KNN. Los resultados muestran que el clasificador Naive Bayes supera a los demas, llegando a tener precisión de 0.45, recall de 0.98 y f1-score de 0.62. Recordar que recall mide la sensibilidad de una predicción falsa, al obtener un alto valor nos da esperanzas que el modelo NaiveBayes es robusto.
+
+![Resultado del diferentes algoritmos de clasificacion ](/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/Datasets sismológicos/resultados_class.png)
+
+
+La imagen de abajo representa a un árbol de profundidad 1 utilizando el algoritmo DecisionTree. Cuando el árbol tiene una profundidad 1 el criterio de clasificación es la profundidad, lo cual representa la predominancia de este atributo para la predicción, igual como se mostró en el análisis de los datos.
+
+![Resultado del algoritmo DesicionTree con profundidad 1 ](/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/clasificador egresos/1precision.png)
+
+![Resultado del algoritmo DesicionTree con profundidad 3 ](/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/clasificador egresos/3precision.png)
+
 
 
 # Consideraciones de comentarios
@@ -749,6 +921,123 @@ for p in pruebas:
     print("#####################################################") 
     print()
 
+```
+Código clasificador para Ingresos de pacientes a Hospitales
+```{python eval=FALSE}
+
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn import metrics, model_selection
+from sklearn.metrics import f1_score, recall_score, precision_score, classification_report, confusion_matrix
+from sklearn.model_selection import GridSearchCV
+from sklearn.utils.multiclass import unique_labels
+
+from sklearn.dummy import DummyClassifier
+from sklearn.svm import SVC  # support vector machine classifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB  # naive bayes
+from sklearn.neighbors import KNeighborsClassifier
+
+
+testSismos = '/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/SismosClasificador.csv'
+data = pd.read_csv(testSismos)  # abrimos el archivo csv y lo cargamos en data.
+names = list(data)
+for name in names:
+    if "Unnamed" in name:
+        data.pop(name)
+# data.columns
+
+#### select columns
+X = data[['Depth', 'Magnitude', 'Region_Arica_Parinacota', 'Region_Tarapaca', 'Region_Antofagasta', 'Region_Atacama',
+ 'Region_Coquimbo', 'Region_Valparaiso', 'Region_Metropolitana_Santiago', 'Region_Libertador_General_OHiggins', 'Region_Maule',
+ 'Region_Nuble', 'Region_Biobio', 'Region_Araucania', 'Region_Rios', 'Region_Lagos', 'Region_Aysen_General_Carlos_Ibanez',
+ 'Region_Magallanes_Antartica']]      ## datos, caracteristicas o features de cada ¿Sismo?. 
+y = data['class']    ## ¿clase? para cada instancia anterior.
+
+#### define util functions
+def run_classifier(clf, X, y, num_tests=100):
+    metrics = {'f1-score': [], 'precision': [], 'recall': []}
+        
+    for _ in range(num_tests):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.30)
+        
+        clf.fit(X_train, y_train)
+        predictions = clf.predict(X_test)
+        y_train_pred = clf.predict(X_train)
+        
+        metrics['y_pred'] = predictions
+        metrics['y_prob'] = clf.predict_proba(X_test)[:,1]
+        metrics['f1-score'].append(f1_score(y_test, predictions)) 
+        metrics['recall'].append(recall_score(y_test, predictions))
+        metrics['precision'].append(precision_score(y_test, predictions))
+    
+    return metrics
+
+def plot_confusion_matrix(y_true, y_pred,
+                          normalize=False,
+                          title=None,
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    """
+    # Compute confusion matrix
+    cm = confusion_matrix(y_true, y_pred) 
+    
+    # Only use the labels that appear in the data
+    #classes = classes[unique_labels(y_true, y_pred)]
+    classes = ['class']
+   
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    # We want to show all ticks...
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           # ... and label them with the respective list entries
+           xticklabels=classes, yticklabels=classes,
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                    ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+    return ax
+
+
+######### run classifiers #########
+
+    
+c0 = ("Base Dummy", DummyClassifier(strategy='stratified'))
+c1 = ("Decision Tree", DecisionTreeClassifier())
+c2 = ("Gaussian Naive Bayes", GaussianNB())
+c3 = ("KNN", KNeighborsClassifier(n_neighbors=5))
+
+classifiers = [c0,c1, c2, c3]
+
+results = {}
+for name, clf in classifiers:
+    metrics = run_classifier(clf, X, y, num_tests=20)   # hay que implementarla en el bloque anterior.
+    results[name] = metrics
+    print("----------------")
+    print("Resultados para clasificador: ",name) 
+    print("Precision promedio:",np.array(metrics['precision']).mean())
+    print("Recall promedio:",np.array(metrics['recall']).mean())
+    print("F1-score promedio:",np.array(metrics['f1-score']).mean())
+    print("----------------\n\n")
 ```
 
 
