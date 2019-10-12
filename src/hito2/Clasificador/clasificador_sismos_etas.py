@@ -14,9 +14,6 @@ from sklearn.tree import export_graphviz
 from sklearn import tree
 import pydotplus
 
-#import os
-#os.environ['PATH'] = os.environ['PATH'] + ';' + r"/home/cllullt/Documents/Universidad/Intro_Minería_de_datos/mineria_datos/bin/graphviz"
-
 
 def exportTreeImage(dtree, X, y, path):
     # Create dot data
@@ -25,8 +22,6 @@ def exportTreeImage(dtree, X, y, path):
             rounded=True, special_characters=True,
             feature_names=X.columns.tolist(),
             class_names=['Disminucióno','Aumento'])
-
-#            class_names=array(['Aumento'], dtype='<U10'))
 
     # Draw graph
     graph = pydotplus.graph_from_dot_data(dot_data)
@@ -37,13 +32,6 @@ def exportTreeImage(dtree, X, y, path):
     # Create PNG
     graph.write_png(path)
     
-#    dot_data = StringIO()
-#    export_graphviz(dtree, out_file=dot_data, filled=True,
-#            rounded=True, special_characters=True)
-#    graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
-#    Image(graph.create_png())
-#    graph.write_png(path)
-
 
 pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
 
@@ -64,11 +52,11 @@ for p in pruebas:
     print(classification_report(y_test, y_pred))
 
     # Supuestamente imprime atributos del árbol
-    print("Atributos del árbol en formato lista:")
-    print(clf.get_params())
+    #print("Atributos del árbol en formato lista:")
+    #print(clf.get_params())
 
     # Exportar árbol
-    exportTreeImage(clf, X, y, p + ".png")
+    #exportTreeImage(clf, X, y, p + ".png")
 
     print("Batería de tests")
     print()
