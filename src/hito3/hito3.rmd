@@ -1,0 +1,63 @@
+---
+title: "Informe Hito 3: Trabajo con datos sismológicos"
+author: "Jhonny Cerezo, Pablo Helguero, Cristián Llull, Rodrigo Llull"
+date: "Diciembre (Enero?) 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Arial
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(reticulate)
+use_python("/usr/bin/python3")
+library("bookdown")
+```
+
+# Introducción
+
+Los sismos en Chile son fenómenos muy recurrentes.
+Aun son impredecibles.
+
+Los sismos puden tener consecuencias.
+Se decidió indagar si tienen relación con las enfermedades transmitidas por alimentos.
+El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
+
+Conjunto de _dataset_ actualmente utilizado:
+
+Dataset               | Objetivo del dataset
+--------------------- | --------------------
+Datos sismológicos    | 
+Egresos hospitalarios | Dado un sismo, experimentar el aumento o la disminución de egresos hospitalarios
+ETAs                  | Dado un sismo, experimentar el aumento o la disminución de enfermedades transmitidas por alimentos.
+
+## Hipótesis
+
+> Hay que ver si esta parte la dejamos o no
+
+### Hito 1
+
+### Hito 2
+
+> Fin parte que hay que revisar
+
+## Metodología
+
+
+# Descripción de los datos
+
+## Datos sismológicos
+
+## Datos de registro de ingresos hospitalarios
+
+## Datos de enfermedades transmitidas por alimentos
