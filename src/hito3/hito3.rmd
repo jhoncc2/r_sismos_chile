@@ -1,7 +1,7 @@
 ---
 title: "Informe Hito 3: Trabajo con datos sismológicos"
 author: "Jhonny Cerezo, Pablo Helguero, Cristián Llull, Rodrigo Llull"
-date: "Diciembre (Enero?) 2019"
+date: "Enero de 2020"
 output:
   html_document:
     toc: true
@@ -13,7 +13,7 @@ output:
 # Configuraciones del documento pdf
 fontsize: 12pt
 mainfont: Charter
-sansfont: Arial
+sansfont: Open Sans
 monofont: Liberation Mono
 ---
 

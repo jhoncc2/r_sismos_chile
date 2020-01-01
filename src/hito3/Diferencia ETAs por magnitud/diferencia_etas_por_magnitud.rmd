@@ -1,0 +1,119 @@
+---
+title: "Estudiar diferencia en la cantidad de ETAs según magnitud"
+date: "Enero de 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Open Sans
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Cargar datos sismológicos
+
+Sismos vienen con las columnas _Year_, _Month_ y _Day_.
+```{r cargarSismos}
+sismos <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
+                     header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+```
+
+Los datos de ETA no vienen con esas columnas, pero se pueden generar.
+Quizás en el futuro las podamos guardar con las columnas generadas.
+
+```{r cargarEtas}
+# Carga de las ETAs
+etas <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
+                   header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+etas <- agregarFechasEtas(etas)
+```
+
+
+Estudiar las diferencias de ETAs producidas por sismos de diferentes magnitudes.
+Similarmente a lo realizado en el Hito 2, pero esta vez, dejar Δ igual a la diferencia y no a 1 o 0.
+Del Hito 2 se supo también que los mejores resultados eran aquellos con 7 días de intervalo, por lo que ahora solo se usarán esos para trabajar.
+
+# Extracción de los sismos y sus Δs
+Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos de 7 días.
+Se crea una función para trabajar los datos más fácil.
+
+```{r}
+generar_datos <- function(sismos, etas, magnitud_min, dias) {
+  sismos_mag <- sismos[sismos$Magnitude >= magnitud_min
+                       & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+  datos <- data.frame(Magnitud = rep(0, nrow(sismos_mag)),
+                      Profundidad = rep(0, nrow(sismos_mag)),
+                      Region = rep(0, nrow(sismos_mag)),
+                      Aumento = rep(0, nrow(sismos_mag)))
+  for (i in 1:nrow(sismos_mag)) {
+    sismo <- sismos_mag[i, ]
+    # Tomar los dias días anteriores
+    etas_ant <- etas[sismo$num_date - 7/30/12 <= etas$num_date
+                     & etas$num_date <= sismo$num_date, ]
+    # Tomar los 7 días posteriores
+    etas_post <- etas[sismo$num_date < etas$num_date
+                      & etas$num_date <= sismo$num_date + 7/30/12, ]
+    # La diferencia es la cantidad de columnas de las posteriores menos las anteriores
+    dif <- nrow(etas_post) - nrow(etas_ant)
+    
+    # Asignar los valores a los datos
+    datos[i, ]$Magnitud <- sismo$Magnitude
+    datos[i, ]$Profundidad <- sismo$Depth
+    datos[i, ]$Region <- sismo$Region_Number
+    # A diferencia del Hito 2, se guarda el Δ completo
+    datos[i, ]$Aumento <- dif
+  }
+  # Escribir el csv con los datos obtenidos
+  nombre_archivo <- paste("datos_mag", magnitud_min, "_", dias, "d.csv", sep="", collapse=NULL)
+  write.csv(datos, nombre_archivo, row.names=FALSE)
+}
+```
+
+
+## Magnitud 5, 7 días
+
+Generar datos para extraer predictor de ábol de decisión para sismos de magnitud mayor o igual a 5, con un intervalo de 7 días antes y 7 días después.
+
+```{r, eval=FALSE}
+generar_datos(sismos, etas, 5, 7)
+```
+
+## Magnitud 6, 7 días
+
+Generar datos similares para magnitud mayor o igual a 6, intervalo de 7 días.
+
+```{r, eval=FALSE}
+generar_datos(sismos, etas, 6, 7)
+```
+
+## Magnitud 7, 7 días
+
+```{r, eval=FALSE}
+generar_datos(sismos, etas, 7, 7)
+```
+
+
+# ¿Cuánto aumento según la región?
