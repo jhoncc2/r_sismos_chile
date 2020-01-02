@@ -6,18 +6,17 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from clasificador_sismos_etas import *
 
 
 pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
 
 
 for p in pruebas:
-    print(type(p))
-    X= pd.read_csv("X" + p + ".csv");
-    y= pd.read_csv("y" + p + ".csv");
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
     
+    clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
+            "X" + p + ".csv", "y" + p + ".csv")
+ 
     print("Batería de tests: " + p)
     print()
 
