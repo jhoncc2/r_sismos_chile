@@ -21,7 +21,7 @@ def exportTreeImage(dtree, X, y, path):
             filled=True,
             rounded=True, special_characters=True,
             feature_names=X.columns.tolist(),
-            class_names=['Disminucióno','Aumento'])
+            class_names=['Disminución','Aumento'])
 
     # Draw graph
     graph = pydotplus.graph_from_dot_data(dot_data)
@@ -33,49 +33,66 @@ def exportTreeImage(dtree, X, y, path):
     graph.write_png(path)
     
 
-pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
-
-for p in pruebas:
-    print(type(p))
-    X= pd.read_csv("X" + p + ".csv");
-    y= pd.read_csv("y" + p + ".csv");
+def entrenarClasificador(prueba, path_X, path_y):
+    print("########## Inicio de entrenamiento ###########")
+    print(type(prueba))
+    X= pd.read_csv("X" + prueba + ".csv");
+    y= pd.read_csv("y" + prueba + ".csv");
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
 
     clf= DecisionTreeClassifier()
-
     clf.fit(X_train, y_train)
 
     y_pred= clf.predict(X_test)
-    print("Accuracy en test set:", accuracy_score(y_test, y_pred))
 
+    print("Accuracy en test set:", accuracy_score(y_test, y_pred))
     print(classification_report(y_test, y_pred))
 
-    # Supuestamente imprime atributos del árbol
-    #print("Atributos del árbol en formato lista:")
-    #print(clf.get_params())
+    print("########### Fin de entrenamiento #############") 
+    print("##############################################")
 
-    # Exportar árbol
-    #exportTreeImage(clf, X, y, p + ".png")
+    return clf, X, y, X_train, y_train, X_test, y_test
 
-    print("Batería de tests")
-    print()
 
-    tuned_parameters = {'criterion': ['gini','entropy'], 'max_depth': [1,3,5]} #Completar tuned_parameters
+def main():
 
-    score = 'precision'
+    pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
 
-    clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
+    for p in pruebas:
+    
+        clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
+                                                "X" + p + ".csv",
+                                                "y" + p + ".csv")
+
+        # Supuestamente imprime atributos del árbol
+        #print("Atributos del árbol en formato lista:")
+        #print(clf.get_params())
+
+        # Exportar árbol
+        #exportTreeImage(clf, X, y, p + ".png")
+
+        print("############## Batería de tests ##############")
+        print()
+
+        tuned_parameters = {'criterion': ['gini','entropy'], 'max_depth': [1,3,5]} #Completar tuned_parameters
+
+        score = 'precision'
+    
+        clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
                            scoring=score)
-    clf.fit(X_train, y_train)
+        clf.fit(X_train, y_train)
 
-    print("Mejor combinación de parámetros:")
-    print(clf.best_params_)
+        print("Mejor combinación de parámetros:")
+        print(clf.best_params_)
      
-    y_true, y_pred = y_test, clf.predict(X_test)
-    print(classification_report(y_true, y_pred))
+        y_true, y_pred = y_test, clf.predict(X_test)
+        print(classification_report(y_true, y_pred))
 
-    print()
-    print("###################") 
-    print()
+        print()
+        print("########### Fin batería de tests #############") 
+        print("##############################################")
+        print()
 
+if __name__ == '__main__':
+    main()
