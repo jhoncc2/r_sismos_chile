@@ -216,19 +216,52 @@ Se pueden generar gráficos que muestren esto.
 
 
 ```{r}
-boxplot(mag5_3d$Aumento, mag5_7d$Aumento, mag5_14d$Aumento, mag5_30d$Aumento)
+par(mfrow=c(1, 3))
+
+outl_mag5 <- boxplot(mag5_3d$Aumento, mag5_7d$Aumento, mag5_14d$Aumento, mag5_30d$Aumento)$out
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+print("Porcentaje de outliers magnitud 5 o más: ")
+length(outl_mag5)/length(mag5_7d$Aumento) * 100
+
+outl_mag6 <- boxplot(mag6_3d$Aumento, mag6_7d$Aumento, mag6_14d$Aumento, mag6_30d$Aumento)$out
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+print("Porcentaje de outliers magnitud 6 o más: ")
+length(outl_mag6)/length(mag6_7d$Aumento) * 100
+
+outl_mag7 <- boxplot(mag7_3d$Aumento, mag7_7d$Aumento, mag7_14d$Aumento, mag7_30d$Aumento)$out
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+print("Porcentaje de outliers magnitud 7 o más: ")
+length(outl_mag7)/length(mag7_7d$Aumento) * 100
+```
+
+Removemos los outliers de los datasets
+
+```{r}
+mag5_7d_sinout <- mag5_7d[-which(mag5_7d$Aumento %in% outl_mag5), ]
+mag5_14d_sinout <- mag5_14d[-which(mag5_14d$Aumento %in% outl_mag5), ]
+
+mag6_7d_sinout <- mag6_7d[-which(mag6_7d$Aumento %in% outl_mag6), ]
+mag6_14d_sinout <- mag6_14d[-which(mag6_14d$Aumento %in% outl_mag6), ]
+
+mag7_7d_sinout <- mag7_7d[-which(mag7_7d$Aumento %in% outl_mag7), ]
+mag7_14d_sinout <- mag7_14d[-which(mag7_14d$Aumento %in% outl_mag7), ]
+
+
+par(mfrow=c(1, 3))
+
+boxplot(mag5_7d_sinout$Aumento, mag5_14d_sinout$Aumento)
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+boxplot(mag6_7d_sinout$Aumento, mag6_14d_sinout$Aumento)
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+boxplot(mag7_7d_sinout$Aumento, mag7_14d_sinout$Aumento)
 lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 ```
 
-```{r}
-boxplot(mag6_3d$Aumento, mag6_7d$Aumento, mag6_14d$Aumento, mag6_30d$Aumento)
-lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
-```
-
-```{r}
-boxplot(mag7_3d$Aumento, mag7_7d$Aumento, mag7_14d$Aumento, mag7_30d$Aumento)
-lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
-```
 
 
 # Clustering
@@ -253,13 +286,15 @@ generar_datos_cluster <- function(datos) {
     Region = datos$Region,
     Aumento = datos$Aumento
   )
-  x
+  (scale(x))
 }
 
-x1 <- generar_datos_cluster(mag6_7d)
-x2 <- generar_datos_cluster(mag6_14d)
-x3 <- generar_datos_cluster(mag7_7d)
-x4 <- generar_datos_cluster(mag7_14d)
+x1 <- generar_datos_cluster(mag5_7d_sinout)
+x2 <- generar_datos_cluster(mag5_14d_sinout)
+x3 <- generar_datos_cluster(mag6_7d_sinout)
+x4 <- generar_datos_cluster(mag6_14d_sinout)
+x5 <- generar_datos_cluster(mag7_7d_sinout)
+x6 <- generar_datos_cluster(mag7_14d)
 
 ```
 
@@ -289,22 +324,26 @@ Notar que el orden generado será magnitud 6, 7 días, luego 6, 14 días, despu�
 
 ```{r}
 set.seed(3)
-cant_clusters <- 4
+cant_clusters <- 5
 ns <- 20
 
 km.out1 <- kmeans(x1, cant_clusters, nstart=ns)
 km.out2 <- kmeans(x2, cant_clusters, nstart=ns)
 km.out3 <- kmeans(x3, cant_clusters, nstart=ns)
 km.out4 <- kmeans(x4, cant_clusters, nstart=ns)
+km.out5 <- kmeans(x5, cant_clusters, nstart=ns)
+km.out6 <- kmeans(x6, cant_clusters, nstart=ns)
 
 pairs(x1, col=km.out1$cluster, pch=8)
 pairs(x2, col=km.out2$cluster, pch=8)
 pairs(x3, col=km.out3$cluster, pch=8)
 pairs(x4, col=km.out4$cluster, pch=8)
+pairs(x5, col=km.out5$cluster, pch=8)
+pairs(x6, col=km.out6$cluster, pch=8)
 
 ```
 
-Se puede observar que en general para los sismos de magnitud 7, se genera un aumento para cualquier magnitud, produndidad o región.
+Se puede observar que en general para los sismos de magnitud 7, se genera un aumento para cualquier magnitud, profundidad o región.
 Esto coincide con las predicciones del clasificador, que dicen que para sismos de mangitud 7 o más, sí o sí aumentan los reportes de ETAs.
 
 ## Clustering Jerárquico Aglomerativo
@@ -312,17 +351,24 @@ Esto coincide con las predicciones del clasificador, que dicen que para sismos d
 Se pensó en esta manera pensando en que los resultados pueden estar distribuidos como árbol.
 
 ```{r}
-# Recordar que x1 es magnitud 6 a 7 días de intervalo
-hc.complete <- hclust(dist(x1), method = "complete")
-hc.single <- hclust(dist(x1), method = "single")
-hc.average <- hclust(dist(x1), method = "average")
+generar_hc <- function(data) {
+  hc.complete <- hclust(dist(data), method = "complete")
+  hc.single <- hclust(dist(data), method = "single")
+  hc.average <- hclust(dist(data), method = "average")
+  
+  #par(mfrow=c(1,3))
+  plot(hc.complete, main="Complete", xlab="", ylab="", cex=.9)
+  plot(hc.single, main="Single", xlab="", ylab="", cex=.9)
+  plot(hc.average, main="Average", xlab="", ylab="", cex=.9)
+  
+  # Se asume que viene escalado
+  #plot(hclust(dist(x3), method = "complete"), main = "HC complete (scaled features)")
+}
+# Recortamos outliers
 
-#par(mfrow=c(1,3))
-plot(hc.complete, main="Complete", xlab="", ylab="", cex=.9)
-plot(hc.single, main="Single", xlab="", ylab="", cex=.9)
-plot(hc.average, main="Average", xlab="", ylab="", cex=.9)
 
-xec <- scale(x1)
-plot(hclust(dist(xec), method = "complete"), main = "HC complete (scaled features)")
+# Recordar que x3 es magnitud 6 a 7 días de intervalo
+generar_hc(x3)
+
 ```
 

@@ -104,7 +104,7 @@ library(caret)
 library(dplyr)
 library(ggmap)
 
-data <- read.delim("Datasets sismológicos/all.csv", header = TRUE, sep = "|", quote = "\"",
+data <- read.delim("../hito2/Datasets sismológicos/all.csv", header = TRUE, sep = "|", quote = "\"",
            dec = ".", fill = TRUE, comment.char = "#")
 
 mapData = tail(data, n=100)
