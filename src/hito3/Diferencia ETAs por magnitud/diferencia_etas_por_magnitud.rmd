@@ -1,0 +1,328 @@
+---
+title: "Estudiar diferencia en la cantidad de ETAs según magnitud"
+date: "Enero de 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Open Sans
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Cargar datos sismológicos
+
+Sismos vienen con las columnas _Year_, _Month_ y _Day_.
+```{r cargarSismos}
+sismos <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
+                     header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+```
+
+Los datos de ETA no vienen con esas columnas, pero se pueden generar.
+Quizás en el futuro las podamos guardar con las columnas generadas.
+
+```{r cargarEtas}
+# Carga de las ETAs
+etas <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
+                   header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
+
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+etas <- agregarFechasEtas(etas)
+```
+
+
+Estudiar las diferencias de ETAs producidas por sismos de diferentes magnitudes.
+Similarmente a lo realizado en el Hito 2, pero esta vez, dejar Δ igual a la diferencia y no a 1 o 0.
+Del Hito 2 se supo también que los mejores resultados eran aquellos con 7 días de intervalo, por lo que ahora solo se usarán esos para trabajar.
+
+# Extracción de los sismos y sus Δs
+Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos (de 3, 7, 14 y 30 días).
+Se crea una función para trabajar los datos más fácil.
+
+```{r}
+generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
+  sismos_mag <- sismos[sismos$Magnitude >= magnitud_min
+                       & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+  # Generar los dataframes
+  # datos es para trabajarlo en el árbol de decisión
+  datos <- data.frame(Magnitud = rep(0, nrow(sismos_mag)),
+                      Profundidad = rep(0, nrow(sismos_mag)),
+                      Region = rep(0, nrow(sismos_mag)),
+                      Aumento = rep(0, nrow(sismos_mag)))
+  # datos_con_fecha es para trabajarlo en lo que viene
+  datos_con_fecha <- data.frame(datos,
+                              Año = rep(0, nrow(sismos_mag)),
+                              Mes = rep(0, nrow(sismos_mag)))
+  for (i in 1:nrow(sismos_mag)) {
+    sismo <- sismos_mag[i, ]
+    # Tomar los dias días anteriores
+    etas_ant <- etas[sismo$num_date - dias/30/12 <= etas$num_date
+                     & etas$num_date <= sismo$num_date, ]
+    # Tomar los 7 días posteriores
+    etas_post <- etas[sismo$num_date < etas$num_date
+                      & etas$num_date <= sismo$num_date + dias/30/12, ]
+    # La diferencia es la cantidad de columnas de las posteriores menos las anteriores
+    dif <- nrow(etas_post) - nrow(etas_ant)
+    
+    # Asignar los valores a los datos
+    datos[i, ]$Magnitud <- sismo$Magnitude
+    datos[i, ]$Profundidad <- sismo$Depth
+    datos[i, ]$Region <- sismo$Region_Number
+    # A diferencia del Hito 2, se guarda el Δ completo
+    datos[i, ]$Aumento <- dif
+    # Guardar datos a retornar
+    datos_con_fecha[i, ] <- datos[i, ]
+    datos_con_fecha[i, ]$Año <- sismo$Year
+    datos_con_fecha[i, ]$Mes <- sismo$Month
+    
+  }
+  # Escribir el csv con los datos obtenidos
+  if (escribir) {
+    nombre_archivo <- paste("datos_mag", magnitud_min, "_", dias, "d.csv", sep="", collapse=NULL)
+    write.csv(datos, nombre_archivo, row.names=FALSE)
+  }
+  (datos_con_fecha)
+}
+```
+
+
+## Magnitud 5
+
+Generar datos para extraer predictor de ábol de decisión para sismos de magnitud mayor o igual a 5, con un intervalo de 3 días antes y 3 días después, 7 días y 14 días.
+
+```{r}
+mag5_3d <- generar_datos(sismos, etas, 5, 3)
+mag5_7d <- generar_datos(sismos, etas, 5, 7)
+mag5_14d <- generar_datos(sismos, etas, 5, 14)
+mag5_30d <- generar_datos(sismos, etas, 5, 30)
+```
+
+## Magnitud 6
+
+Generar datos similares para magnitud mayor o igual a 6, intervalos de 3, 7 y 14 días.
+
+```{r}
+mag6_3d <- generar_datos(sismos, etas, 6, 3)
+mag6_7d <- generar_datos(sismos, etas, 6, 7)
+mag6_14d <- generar_datos(sismos, etas, 6, 14)
+mag6_30d <- generar_datos(sismos, etas, 6, 30)
+```
+
+## Magnitud 7
+
+Generar datos similares para magnitud mayor o igual a 7, intervalos de 3, 7 y 14 días.
+
+```{r}
+mag7_3d <- generar_datos(sismos, etas, 7, 3)
+mag7_7d <- generar_datos(sismos, etas, 7, 7)
+mag7_14d <- generar_datos(sismos, etas, 7, 14)
+mag7_30d <- generar_datos(sismos, etas, 7, 30)
+```
+
+
+# ¿Cuánto aumento según la región?
+
+Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada magnitud y por cada región.
+Además, se puede extraer si se aprecia un aumento según cada magnitud y cada intervalo, obteniendo un resultado en cantidad de ETAs registradas posteriores o anteriores al sismo en promedio.
+
+## Magnitud 5 o más
+
+```{r}
+agg_5_3d <- aggregate(Aumento ~ Region, mag5_3d, FUN=mean)
+(agg_5_7d <- aggregate(Aumento ~ Region, mag5_7d, FUN=mean))
+agg_5_14d <- aggregate(Aumento ~ Region, mag5_14d, FUN=mean)
+agg_5_30d <- aggregate(Aumento ~ Region, mag5_30d, FUN=mean)
+```
+
+Además se puede extraer un aumento promedio para cada intervalo considerado:
+
+```{r}
+mean(mag5_3d$Aumento)
+mean(mag5_7d$Aumento)
+mean(mag5_14d$Aumento)
+mean(mag5_30d$Aumento)
+```
+
+
+## Magnitud 6 o más
+
+```{r}
+agg_6_3d <- aggregate(Aumento ~ Region, mag6_3d, FUN=mean)
+(agg_6_7d <- aggregate(Aumento ~ Region, mag6_7d, FUN=mean))
+agg_6_14d <- aggregate(Aumento ~ Region, mag6_14d, FUN=mean)
+agg_6_30d <- aggregate(Aumento ~ Region, mag6_30d, FUN=mean)
+```
+
+Extrayendo el aumento promedio para cada intervalo considerado:
+
+```{r}
+mean(mag6_3d$Aumento)
+mean(mag6_7d$Aumento)
+mean(mag6_14d$Aumento)
+mean(mag6_30d$Aumento)
+```
+
+
+## Magnitud 7 o más
+
+```{r}
+agg_7_3d <- aggregate(Aumento ~ Region, mag7_3d, FUN=mean)
+(agg_7_7d <- aggregate(Aumento ~ Region, mag7_7d, FUN=mean))
+agg_7_14d <- aggregate(Aumento ~ Region, mag7_14d, FUN=mean)
+agg_7_30d <- aggregate(Aumento ~ Region, mag7_30d, FUN=mean)
+```
+
+```{r}
+mean(mag7_3d$Aumento)
+mean(mag7_7d$Aumento)
+mean(mag7_14d$Aumento)
+mean(mag7_30d$Aumento)
+```
+
+# ¿Cuánto aumento según la fecha (mes + año)?
+
+Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada mes de cada año.
+
+```{r}
+aggregate(Aumento ~ Mes + Año, mag5_3d, FUN=mean)
+```
+
+
+# Resultados
+
+Los resultados obtenidos sugieren una relación directamente proporcional entre la magnitud mínima de los sismos considerados con la cantidad de días tomados para el intervalo, y la diferencia de ETAs registrados previa o posteriormente al sismo.
+Se pueden generar gráficos que muestren esto.
+
+
+```{r}
+boxplot(mag5_3d$Aumento, mag5_7d$Aumento, mag5_14d$Aumento, mag5_30d$Aumento)
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+```
+
+```{r}
+boxplot(mag6_3d$Aumento, mag6_7d$Aumento, mag6_14d$Aumento, mag6_30d$Aumento)
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+```
+
+```{r}
+boxplot(mag7_3d$Aumento, mag7_7d$Aumento, mag7_14d$Aumento, mag7_30d$Aumento)
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+```
+
+
+# Clustering
+
+Procedemos a realizar un _clustering_ a los datos, de tal forma de averiguar si existen grupos de sismos que nos permitan predecir los aumentos o disminuciones.
+
+De los gráficos de caja, se puede extraer que los datos para magnitud 5 no representan tendencias a los aumentos o disminuciones, sino más bien los aumentos van en una distribución normal en torno al 0.
+Por esta razón, no serán utilizados para esta iteración.
+
+Tampoco se pudo encontrar una verdadera tendencia para los datos que tomaban 3 días solamente.
+Se procede a trabajar con datos de 7 y 14 días puesto que para 30 días la dispersión es muy alta.
+Las magnitudes a utilizar serán aquellas mayores o iguales a 6 y a 7.
+
+Genaración de los datos:
+
+```{r}
+# Asume que los nombres vienen en el formato «mag6_3d»
+generar_datos_cluster <- function(datos) {
+  x <- data.frame(
+    Magnitud = datos$Magnitud,
+    Profundidad = datos$Profundidad,
+    Region = datos$Region,
+    Aumento = datos$Aumento
+  )
+  x
+}
+
+x1 <- generar_datos_cluster(mag6_7d)
+x2 <- generar_datos_cluster(mag6_14d)
+x3 <- generar_datos_cluster(mag7_7d)
+x4 <- generar_datos_cluster(mag7_14d)
+
+```
+
+Vemos la cantidad de _clusters_ según el método del codo:
+
+```{r}
+elbow_fun <- function (data) {
+  wss <- 0
+  for (i in 1:clust){
+    wss[i] <- sum(kmeans(data, centers=i)$withinss)
+  }
+  wss
+}
+
+
+# Método del codo para 15 clusters, sobre el dataset para magnitud 6 y 7 días de intervalo
+clust <- 15
+
+wss1 <- elbow_fun(x1)
+
+plot(1:clust, wss1, type="b", xlab="Número de clusters", ylab="wss")
+```
+
+Se ve que son 3 _clusters_ en el codo, pero por acción experimental, se determinó que lo mejor eran 4 _clusters_.
+
+Notar que el orden generado será magnitud 6, 7 días, luego 6, 14 días, después 7, 7 días y finalmente 7, 14 días.
+
+```{r}
+set.seed(3)
+cant_clusters <- 4
+ns <- 20
+
+km.out1 <- kmeans(x1, cant_clusters, nstart=ns)
+km.out2 <- kmeans(x2, cant_clusters, nstart=ns)
+km.out3 <- kmeans(x3, cant_clusters, nstart=ns)
+km.out4 <- kmeans(x4, cant_clusters, nstart=ns)
+
+pairs(x1, col=km.out1$cluster, pch=8)
+pairs(x2, col=km.out2$cluster, pch=8)
+pairs(x3, col=km.out3$cluster, pch=8)
+pairs(x4, col=km.out4$cluster, pch=8)
+
+```
+
+Se puede observar que en general para los sismos de magnitud 7, se genera un aumento para cualquier magnitud, produndidad o región.
+Esto coincide con las predicciones del clasificador, que dicen que para sismos de mangitud 7 o más, sí o sí aumentan los reportes de ETAs.
+
+## Clustering Jerárquico Aglomerativo
+
+Se pensó en esta manera pensando en que los resultados pueden estar distribuidos como árbol.
+
+```{r}
+# Recordar que x1 es magnitud 6 a 7 días de intervalo
+hc.complete <- hclust(dist(x1), method = "complete")
+hc.single <- hclust(dist(x1), method = "single")
+hc.average <- hclust(dist(x1), method = "average")
+
+#par(mfrow=c(1,3))
+plot(hc.complete, main="Complete", xlab="", ylab="", cex=.9)
+plot(hc.single, main="Single", xlab="", ylab="", cex=.9)
+plot(hc.average, main="Average", xlab="", ylab="", cex=.9)
+
+xec <- scale(x1)
+plot(hclust(dist(xec), method = "complete"), main = "HC complete (scaled features)")
+```
+

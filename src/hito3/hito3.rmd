@@ -1,0 +1,72 @@
+---
+title: "Informe Hito 3: Trabajo con datos sismológicos"
+author: "Jhonny Cerezo, Pablo Helguero, Cristián Llull, Rodrigo Llull"
+date: "Enero de 2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: yeti # o readable o default
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+# Configuraciones del documento pdf
+fontsize: 12pt
+mainfont: Charter
+sansfont: Open Sans
+monofont: Liberation Mono
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(reticulate)
+use_python("/usr/bin/python3")
+library("bookdown")
+```
+
+# Introducción
+
+Los sismos en Chile son fenómenos muy recurrentes.
+Aun son impredecibles.
+
+Los sismos puden tener consecuencias.
+Se decidió indagar si tienen relación con las enfermedades transmitidas por alimentos.
+El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
+
+Conjunto de _dataset_ actualmente utilizado:
+
+Dataset               | Objetivo del dataset
+--------------------- | --------------------
+Datos sismológicos    | 
+Egresos hospitalarios | Dado un sismo, experimentar el aumento o la disminución de egresos hospitalarios
+ETAs                  | Dado un sismo, experimentar el aumento o la disminución de enfermedades transmitidas por alimentos.
+
+## Hipótesis
+
+> Hay que ver si esta parte la dejamos o no
+
+### Hito 1
+
+### Hito 2
+
+> Fin parte que hay que revisar
+
+## Metodología
+
+### Determinación del umbral para clasificador ETAs
+Se cargan los datos con la función *generar_datos*, de la forma
+```{r}
+mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
+```
+Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
+```{r}
+quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 101))
+```
+
+# Descripción de los datos
+
+## Datos sismológicos
+
+## Datos de registro de ingresos hospitalarios
+
+## Datos de enfermedades transmitidas por alimentos
