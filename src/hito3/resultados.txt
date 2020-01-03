@@ -1,0 +1,209 @@
+----------------
+Resultados para clasificador:  SismosEgresos completos altura 3
+Precision promedio: 0.5203619909502263
+Recall promedio: 0.09770603228547149
+F1-score promedio: 0.16452074391988553
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos altura 4
+Precision promedio: 0.503968253968254
+Recall promedio: 0.10790144435004251
+F1-score promedio: 0.1777466759972009
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos altura 5
+Precision promedio: 0.5016835016835017
+Recall promedio: 0.12659303313508924
+F1-score promedio: 0.2021709633649932
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos altura 6
+Precision promedio: 0.5209362458588089
+Recall promedio: 0.12047578589634661
+F1-score promedio: 0.19569300653768976
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 5 altura 4
+Precision promedio: 0.2437
+Recall promedio: 0.048
+F1-score promedio: 0.0801986577181208
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 5 altura 5
+Precision promedio: 0.4575062312770507
+Recall promedio: 0.28544
+F1-score promedio: 0.3515326320904579
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 5 altura 6
+Precision promedio: 0.4965260545905707
+Recall promedio: 0.36472
+F1-score promedio: 0.4205233975597437
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 6 altura 4
+Precision promedio: 0.0
+Recall promedio: 0.0
+F1-score promedio: 0.0
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 6 altura 5
+Precision promedio: 0.49777777777777776
+Recall promedio: 0.36727272727272736
+F1-score promedio: 0.42175438596491227
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 6 altura 6
+Precision promedio: 0.40628571428571436
+Recall promedio: 0.2336363636363636
+F1-score promedio: 0.29470760233918125
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 7 altura 3
+Precision promedio: 1.0
+Recall promedio: 1.0
+F1-score promedio: 1.0
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 7 altura 4
+Precision promedio: 1.0
+Recall promedio: 1.0
+F1-score promedio: 1.0
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 7 altura 5
+Precision promedio: 1.0
+Recall promedio: 1.0
+F1-score promedio: 1.0
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos sin region altura 3
+Precision promedio: 0.47643979057591623
+Recall promedio: 0.07731520815632967
+F1-score promedio: 0.13304093567251463
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos sin region altura 4
+Precision promedio: 0.5125000000000002
+Recall promedio: 0.06966864910790148
+F1-score promedio: 0.12266267763649964
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos sin region altura 5
+Precision promedio: 0.47714285714285715
+Recall promedio: 0.14188615123194562
+F1-score promedio: 0.2187295350360183
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos completos sin region altura 6
+Precision promedio: 0.5155038759689922
+Recall promedio: 0.11299915038232795
+F1-score promedio: 0.1853658536585365
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 5 sin region altura 4
+Precision promedio: 0.5192062146892655
+Recall promedio: 0.2480000000000001
+F1-score promedio: 0.33566333725029374
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 5 sin region altura 5
+Precision promedio: 0.4056674208144797
+Recall promedio: 0.16799999999999993
+F1-score promedio: 0.23759822804314332
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 5 sin region altura 6
+Precision promedio: 0.4051660401002505
+Recall promedio: 0.18400000000000002
+F1-score promedio: 0.2530684232894177
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 6 sin region altura 4
+Precision promedio: 0.41738991727227026
+Recall promedio: 0.47909090909090907
+F1-score promedio: 0.4424595546584104
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 6 sin region altura 5
+Precision promedio: 0.43127056277056275
+Recall promedio: 0.38454545454545447
+F1-score promedio: 0.4028175023702012
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 6 sin region altura 6
+Precision promedio: 0.4658084415584415
+Recall promedio: 0.43363636363636354
+F1-score promedio: 0.4465589863988032
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 7 sin region altura 3
+Precision promedio: 1.0
+Recall promedio: 1.0
+F1-score promedio: 1.0
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 7 sin region altura 4
+Precision promedio: 1.0
+Recall promedio: 1.0
+F1-score promedio: 1.0
+----------------
+
+
+----------------
+Resultados para clasificador:  SismosEgresos mag 7 sin region altura 5
+Precision promedio: 1.0
+Recall promedio: 1.0
+F1-score promedio: 1.0
+----------------
+
+
+generación completa
