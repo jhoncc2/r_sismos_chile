@@ -21,7 +21,7 @@ def exportTreeImage(dtree, X, y, path):
             filled=True,
             rounded=True, special_characters=True,
             feature_names=X.columns.tolist(),
-            class_names=['Disminución', 'Aumento'])
+            class_names=['Alta_Dism.', 'Baja_Dism.','Bajo_Aum.', 'Alto_Aum.'])
 
     # Draw graph
     graph = pydotplus.graph_from_dot_data(dot_data)
@@ -34,6 +34,7 @@ def exportTreeImage(dtree, X, y, path):
     
 
 def entrenarClasificador(prueba, path_X, path_y):
+    print("##############################################")
     print("########## Inicio de entrenamiento ###########")
     print(type(prueba))
     print("Leyendo archivo " + path_X)
@@ -45,7 +46,7 @@ def entrenarClasificador(prueba, path_X, path_y):
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
 
-    clf= DecisionTreeClassifier()
+    clf= DecisionTreeClassifier(max_depth=3)
     clf.fit(X_train, y_train)
 
     y_pred= clf.predict(X_test)
@@ -61,13 +62,15 @@ def entrenarClasificador(prueba, path_X, path_y):
 
 def main():
 
-    pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
+    pruebas= ["5_7d", "5_14d", "6_7d", "6_14d", "7_7d", "7_14d"]
 
     for p in pruebas:
     
+        print("##########################################")
+        print("Clasificador con región")
         clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
                                                 "X" + p + ".csv",
-                                                "y" + p + ".csv")
+                                                "y" + p + "_cat.csv")
 
         # Supuestamente imprime atributos del árbol
         #print("Atributos del árbol en formato lista:")
@@ -75,6 +78,14 @@ def main():
 
         # Exportar árbol
         exportTreeImage(clf, X, y, p + ".png")
+
+        print("##########################################")
+        print("Clasificador sin región")
+        clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
+                                                "X" + p + "_sin_reg.csv",
+                                                "y" + p + "_cat.csv")
+        exportTreeImage(clf, X, y, p + "sin_reg.png")
+
 
 
 if __name__ == '__main__':
