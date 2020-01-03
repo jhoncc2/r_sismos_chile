@@ -36,8 +36,12 @@ def exportTreeImage(dtree, X, y, path):
 def entrenarClasificador(prueba, path_X, path_y):
     print("########## Inicio de entrenamiento ###########")
     print(type(prueba))
-    X= pd.read_csv("X" + prueba + ".csv");
-    y= pd.read_csv("y" + prueba + ".csv");
+    print("Leyendo archivo " + path_X)
+    X= pd.read_csv(path_X);
+    print("Success")
+    print("Leyendo archivo " + path_y)
+    y= pd.read_csv(path_y);
+    print("Succes")
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
 
@@ -79,8 +83,8 @@ def main():
 
         score = 'precision'
     
-        clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters, cv=5,
-                           scoring=score)
+        clf = GridSearchCV(DecisionTreeClassifier(), param_grid=tuned_parameters,
+                cv=5, scoring=score)
         clf.fit(X_train, y_train)
 
         print("Mejor combinación de parámetros:")
