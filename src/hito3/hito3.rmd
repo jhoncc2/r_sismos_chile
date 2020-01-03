@@ -53,6 +53,15 @@ ETAs                  | Dado un sismo, experimentar el aumento o la disminución
 
 ## Metodología
 
+### Determinación del umbral para clasificador ETAs
+Se cargan los datos con la función *generar_datos*, de la forma
+```{r}
+mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
+```
+Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
+```{r}
+quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 101))
+```
 
 # Descripción de los datos
 
