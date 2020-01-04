@@ -128,6 +128,59 @@ Profundad define la distancia entre el epicentro de un terremoto con respecto al
 Tiempo es el registro del evento.
 
 
+### Sismos por estaciones del año
+
+Primero mostramos la gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019.
+
+```{r, message=FALSE, echo=FALSE}
+# load libraries
+library(tidyverse)
+library(lubridate)
+
+# create new columns 
+
+dtime = as.Date(data$Time)
+season_data <-  mutate(data,
+  year = year(dtime),
+  month = month(dtime),
+  mday = mday(dtime)
+)
+
+# consider the limitation of seasons simply by looking into range of values
+# we bound the seasons by month value, 
+# we round the days of the season boundary. E.g. Sept 21 -> OCT
+
+season_data <- mutate(season_data,
+  season = case_when (
+      month >= 4 & month <= 6 ~ "otonio",
+      month >= 7 & month <= 9 ~ "invierno",
+      month >= 10 & month <= 12 ~ "primavera",
+      month >= 1 & month <= 3 ~ "verano"
+    )
+) 
+
+
+# install if needed ggpubr
+#install.packages("ggpubr")
+library(ggpubr)
+
+bplot <- season_data %>% 
+  # filter(year > 2010) %>% 
+  ggplot(mapping = aes(x=season)) + 
+  geom_bar()
+
+dplot <- season_data %>% 
+  group_by(season) %>% 
+  summarise(total = n()) %>% 
+  ggplot(mapping = aes(x=season, y=total)) +
+  geom_point() 
+
+ggarrange(bplot, dplot,
+                    ncol = 2, nrow = 1)
+
+```
+
+
 ### Cantidad de datos del dataset
 
 El gráfico de abajo muestra la cantidad de reportes recolectados por año, dentro de las inferencias, y consultas hechas los outliers que puedan ser registrados con equipos antiguos están exentos por ser mínima en su cantidad.
@@ -163,7 +216,9 @@ ggplot(season_data, mapping = aes(x=year)) +
   geom_bar()
 ```
 
+
 ## Datos de precipitaciones fluviales
+
 Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros.
 
 Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
@@ -266,7 +321,13 @@ de Arica y Parinacota respecto a cada mes\n") + # título
 ```
 
 
-## Datos de registro de ingresos hospitalarios
+## Datos de temperaturas
+
+Los datos de temperaturas máximas, mínimas y medias fueron extraídos de la página del CR2, al igual que los datos de precipitaciones.
+Por esto, tienen la misma clasificación que ellos.
+
+
+## Datos de registros de ingresos hospitalarios
 
 
 
@@ -279,6 +340,9 @@ Para hacer una primera exploración de los resultados, se contó la cantidad de 
 
 Ahora, los sismos vienen con las columnas _Year_, _Month_ y _Day_, que fueron generados con una función similar a _agregarFechas_ que se encuentra en el anexo.
 También incluyen las regiones: estas fueron generadas mediante la función *cargar_sismos_por_region* que se encuentra en el anexo.
+
+
+### Análisis hitos anteriores
 
 ```{r, echo=FALSE}
 # Agregarle las fechas a las ETAs
@@ -342,60 +406,28 @@ ggplot(cant_etas[cant_etas$Región == 2, ]) + # asociamos un data frame a ggplot
   ggtitle("Reportes de ETA anuales\npara la Región de Antofagasta") + # título
   xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
 
-ggplot(cant_etas[cant_etas$Región == 3, ]) + # asociamos un data frame a ggplot
-  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
-  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
-  ggtitle("Reportes de ETA anuales\npara la Región de Atacama") + # título
-  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
-
-ggplot(cant_etas[cant_etas$Región == 5, ]) + # asociamos un data frame a ggplot
-  geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
-  #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
-  ggtitle("Reportes de ETA anuales\npara la Región de Valparaíso") + # título
-  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
-
-# Fase de graficar deshidratación
-cant_etas_deshidratacion <- data.frame("Año"=etas[etas$Deshidratación == "SI", ]$Año.estadistico,
-                                       "Región"=etas[etas$Deshidratación == "SI", ]$Región.de.consumo,
-                                       "Cantidad"=etas[etas$Deshidratación == "SI", ]$Región.de.consumo)
-
-cant_etas_deshidratacion <- aggregate(Cantidad ~ Año + Región, cant_etas_deshidratacion, function(a) {sum(a>0)})
 ```
 
 
-# Minería de datos
+# Pre-procesamiento de los datos
 
-## Diseño experimental
+Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos de alta magnitud y los informes de ETA.
+Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw.
 
-## Determinación del umbral para clasificador de ETAs
-Se cargan los datos con la función *generar_datos* presente en el anexo ( \@ref(generarDatos) ), de la forma
-```{r, eval=FALSE}
-mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
-```
-Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
-```{r, eval=FALSE}
-quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 101))
-```
+Además, de la misma forma como se hizo en la Exploración de los datos, se clasificaron los sismos por Región de Chile.
+De esta manera, se construyó un dataset que tuviera todos los eventos sismológicos disponibles, clasificados por fecha. 
 
-## Clasificadores de enfermedades de transmisión alimentaria
 
-De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos clusters relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
-Además, se observó que, con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
-Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
+# Limpieza de los datos
 
-### Clasificador de árbol de decisión
+## Datos sismológicos
 
-#### Competencia de árboles de decisión
+La limpieza de los datos sismológicos se realizó eliminando aquellas columnas que no representaban un verdadero aporte para los casos de estudio.
+Para ello, se seleccionaron los atributos de Magnitud, profundidad y región.
 
-### Competencia de clasificadores
+De esta forma, se eliminaron todos los otros atributos, dejando datasets más limpios y cómodos de trabajar, en especial para entrenar el clasificador.
 
-## Cambio en la forma de medir los ingresos hospitalarios
-
-### Experimentación con los clasificadores expuestos anteriormente
-
-## Resultados
-
-# Anexo
+La función que se utilizó para realizar esta parte, contó además con el retorno de un dataset que incluía años y meses para un trabajo futuro.
 
 ```{r generarDatos}
 generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
@@ -442,3 +474,221 @@ generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
   (datos_con_fecha)
 }
 ```
+
+Mediante esta función, entonces, se logró almacenar un _dataset_ para sismos, indicando en la columna Aumento el Δ: la diferencia entre cuántas ETAs se registraron los _dias_ días posteriores al sismo y los _dias_ días anteriores al sismo.
+
+
+
+# Minería de datos
+
+Dada la estructura de los datos, se diseñaron clasificadores en la forma de árboles de decisión.
+Así, se podrían identificar los atributos que el clasificador pudiera considerar importantes para hacer la predicción.
+
+
+## Diseño experimental
+
+### Enfermedades de transmisión alimentaria
+
+Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
+Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
+Además, se debió agregar la dimensión de temporalidad, necesaria para apreciar los datos.
+
+De esta manera, se pensó en lo siguiente: si en los _n_ días antes del sismo se registraron menos informes por ETA que en los _n_ días después, quiere decir que el sismo aumentó los informes y por ende los daños.
+De lo contrario, los disminuyó.
+Este valor se denominó Δ, con $\Delta = etas_{post} - etas_{ant}$.
+
+En el Hito 2 se representó con un 1 si el Δ era positivo, y un 0 si era negativo.
+El nuevo Δ permitió aumentar la cantidad de clases a estudiar.
+
+Luego, se realizó el árbol de decisión.
+El experimento consistió en generar un GridSearchCV de DecisionTree para criterios criterion gini y entropy, mientras que con una profundidad máxima de entre 1, 3 y 5 para los árboles generados.
+
+Esto se realizó en Python 3 mediante la librería `sklearn`.
+Se generaron archivos de texto que almacenaran los resultados para los distintos árboles.
+
+![Imagen de cómo se calculó _aumento_](Imágenes/aumento.jpg)
+
+
+#### Determinación del umbral para clasificador de ETAs
+
+Para el nuevo clasificador, fue necesario determinar un umbral con tal de definir la disminución marcada, la disminución tenue, el aumento tenue y el aumento marcado.
+
+Se cargan los datos con la función *generar_datos*, de la forma
+```{r}
+mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
+```
+
+Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
+```{r}
+quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
+```
+
+
+#### Extracción de los sismos y sus Δs
+
+Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos (de 3, 7, 14 y 30 días).
+Se crea una función para trabajar los datos más fácil.
+
+```{r}
+generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
+  sismos_mag <- sismos[sismos$Magnitude >= magnitud_min
+                       & sismos$Year >= 2011 & sismos$Year <= 2017, ]
+  # Generar los dataframes
+  # datos es para trabajarlo en el árbol de decisión
+  datos <- data.frame(Magnitud = rep(0, nrow(sismos_mag)),
+                      Profundidad = rep(0, nrow(sismos_mag)),
+                      Region = rep(0, nrow(sismos_mag)),
+                      Aumento = rep(0, nrow(sismos_mag)))
+  # datos_con_fecha es para trabajarlo en lo que viene
+  datos_con_fecha <- data.frame(datos,
+                              Año = rep(0, nrow(sismos_mag)),
+                              Mes = rep(0, nrow(sismos_mag)))
+  for (i in 1:nrow(sismos_mag)) {
+    sismo <- sismos_mag[i, ]
+    # Tomar los dias días anteriores
+    etas_ant <- etas[sismo$num_date - dias/30/12 <= etas$num_date
+                     & etas$num_date <= sismo$num_date, ]
+    # Tomar los 7 días posteriores
+    etas_post <- etas[sismo$num_date < etas$num_date
+                      & etas$num_date <= sismo$num_date + dias/30/12, ]
+    # La diferencia es la cantidad de columnas de las posteriores menos las anteriores
+    dif <- nrow(etas_post) - nrow(etas_ant)
+    
+    # Asignar los valores a los datos
+    datos[i, ]$Magnitud <- sismo$Magnitude
+    datos[i, ]$Profundidad <- sismo$Depth
+    datos[i, ]$Region <- sismo$Region_Number
+    # A diferencia del Hito 2, se guarda el Δ completo
+    datos[i, ]$Aumento <- dif
+    # Guardar datos a retornar
+    datos_con_fecha[i, ] <- datos[i, ]
+    datos_con_fecha[i, ]$Año <- sismo$Year
+    datos_con_fecha[i, ]$Mes <- sismo$Month
+    
+  }
+  # Escribir el csv con los datos obtenidos
+  if (escribir) {
+    nombre_archivo <- paste("datos_mag", magnitud_min, "_", dias, "d.csv", sep="", collapse=NULL)
+    write.csv(datos, nombre_archivo, row.names=FALSE)
+  }
+  (datos_con_fecha)
+}
+```
+
+Para generar los datos, se procedió de la siguiente forma:
+
+```{r}
+# Sismos de magnitud mayor o igual a 5
+mag5_3d <- generar_datos(sismos, etas, 5, 3)
+mag5_7d <- generar_datos(sismos, etas, 5, 7)
+mag5_14d <- generar_datos(sismos, etas, 5, 14)
+mag5_30d <- generar_datos(sismos, etas, 5, 30)
+
+# Sismos de magnitud mayor o igual a 6
+mag6_3d <- generar_datos(sismos, etas, 6, 3)
+mag6_7d <- generar_datos(sismos, etas, 6, 7)
+mag6_14d <- generar_datos(sismos, etas, 6, 14)
+mag6_30d <- generar_datos(sismos, etas, 6, 30)
+
+# Sismos de magnitud mayor o igual a 7
+mag7_3d <- generar_datos(sismos, etas, 7, 3)
+mag7_7d <- generar_datos(sismos, etas, 7, 7)
+mag7_14d <- generar_datos(sismos, etas, 7, 14)
+mag7_30d <- generar_datos(sismos, etas, 7, 30)
+```
+
+#### Aumento registrado según la región
+
+Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada magnitud y por cada región.
+Además, se puede extraer si se aprecia un aumento según cada magnitud y cada intervalo, obteniendo un resultado en cantidad de ETAs registradas posteriores o anteriores al sismo en promedio.
+
+```{r, message=FALSE}
+# Magnitud 5 o más
+agg_5_3d <- aggregate(Aumento ~ Region, mag5_3d, FUN=mean)
+(agg_5_7d <- aggregate(Aumento ~ Region, mag5_7d, FUN=mean))
+agg_5_14d <- aggregate(Aumento ~ Region, mag5_14d, FUN=mean)
+agg_5_30d <- aggregate(Aumento ~ Region, mag5_30d, FUN=mean)
+
+# Aumnento promedio por intervalo considerado para mgnitud mayor o igual a 5
+promedios <- 0
+promedios[1, 1] <- mean(mag5_3d$Aumento)
+promedios[1, 2] <- mean(mag5_7d$Aumento)
+promedios[1, 3] <- mean(mag5_14d$Aumento)
+promedios[1, 4] <- mean(mag5_30d$Aumento)
+
+# Magnitud 6 o más
+agg_6_3d <- aggregate(Aumento ~ Region, mag6_3d, FUN=mean)
+(agg_6_7d <- aggregate(Aumento ~ Region, mag6_7d, FUN=mean))
+agg_6_14d <- aggregate(Aumento ~ Region, mag6_14d, FUN=mean)
+agg_6_30d <- aggregate(Aumento ~ Region, mag6_30d, FUN=mean)
+
+# Aumento promedio por intervalo considerado para magnitud mayor o igual a 6
+promedios[2, 1] <- mean(mag6_3d$Aumento)
+promedios[2, 2] <- mean(mag6_7d$Aumento)
+promedios[2, 3] <- mean(mag6_14d$Aumento)
+promedios[2, 4] <- mean(mag6_30d$Aumento)
+
+# Magnitud 7 o más
+agg_7_3d <- aggregate(Aumento ~ Region, mag7_3d, FUN=mean)
+(agg_7_7d <- aggregate(Aumento ~ Region, mag7_7d, FUN=mean))
+agg_7_14d <- aggregate(Aumento ~ Region, mag7_14d, FUN=mean)
+agg_7_30d <- aggregate(Aumento ~ Region, mag7_30d, FUN=mean)
+
+# Aumnento promedio por intervalo considerado para mgnitud mayor o igual a 5
+promedios[3, 1] <- mean(mag7_3d$Aumento)
+promedios[3, 2] <- mean(mag7_7d$Aumento)
+promedios[3, 3] <- mean(mag7_14d$Aumento)
+promedios[3, 4] <- mean(mag7_30d$Aumento)
+```
+
+
+## Clasificadores de enfermedades de transmisión alimentaria
+
+De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos clusters relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
+Además, se observó que, con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
+Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
+
+### Clasificador de árbol de decisión
+
+#### Competencia de árboles de decisión
+
+### Competencia de clasificadores
+
+## Cambio en la forma de medir los ingresos hospitalarios
+
+### Experimentación con los clasificadores expuestos anteriormente
+
+## Resultados
+
+# Anexo
+
+
+### Ingresos hospitalarios
+
+
+# Resultados
+
+## Clasificador para enfermedades de transmisión alimentaria
+
+
+## Clasificador para ingresos hospitalarios
+
+
+# Anexo
+
+```{r agregarFechas}
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+```
+
+
