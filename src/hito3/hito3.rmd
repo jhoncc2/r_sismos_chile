@@ -168,7 +168,7 @@ Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados d
 
 Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
 
-Este dataset se dejó de usar para el Hito 3.
+Este dataset se dejó de usar para el Hito 3, porque en las iteraciones anteriores no se encontraron correlaciones entre los sismos y las lluvias, por lo que no resultó relevante utilizar técnicas de minería de datos para revisar estos dataset.
 
 ```{r}
 # Importar dataset de lluvias mensuales
@@ -376,6 +376,24 @@ Luego se determinó el número para el umbral observando el comportamiento parec
 ```{r, eval=FALSE}
 quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 101))
 ```
+
+## Clasificadores de enfermedades de transmisión alimentaria
+
+De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos clusters relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
+Además, se observó que, con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
+Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
+
+### Clasificador de árbol de decisión
+
+#### Competencia de árboles de decisión
+
+### Competencia de clasificadores
+
+## Cambio en la forma de medir los ingresos hospitalarios
+
+### Experimentación con los clasificadores expuestos anteriormente
+
+## Resultados
 
 # Anexo
 
