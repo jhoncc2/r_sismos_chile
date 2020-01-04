@@ -631,6 +631,7 @@ Así, se podrían identificar los atributos que el clasificador pudiera consider
 ## Diseño experimental
 
 ### Enfermedades de Transmisión alimentaria
+
 Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
 Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
 Además, se debió agregar la dimensión de temporalidad tan necesaria para apreciar estos datos.

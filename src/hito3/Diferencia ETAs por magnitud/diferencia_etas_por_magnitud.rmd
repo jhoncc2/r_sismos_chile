@@ -54,7 +54,7 @@ etas <- agregarFechasEtas(etas)
 
 Estudiar las diferencias de ETAs producidas por sismos de diferentes magnitudes.
 Similarmente a lo realizado en el Hito 2, pero esta vez, dejar Δ igual a la diferencia y no a 1 o 0.
-Del Hito 2 se supo también que los mejores resultados eran aquellos con 7 días de intervalo, por lo que ahora solo se usarán esos para trabajar.
+Del Hito 2 se supo también que los mejores resultados eran aquellos con 7 días de intervalo.
 
 # Extracción de los sismos y sus Δs
 Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos (de 3, 7, 14 y 30 días).
