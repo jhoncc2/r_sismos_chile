@@ -278,7 +278,6 @@ Las magnitudes a utilizar serán aquellas mayores o iguales a 6 y a 7.
 Genaración de los datos:
 
 ```{r}
-# Asume que los nombres vienen en el formato «mag6_3d»
 generar_datos_cluster <- function(datos) {
   x <- data.frame(
     Magnitud = datos$Magnitud,

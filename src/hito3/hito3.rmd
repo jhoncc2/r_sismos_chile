@@ -409,7 +409,8 @@ ggplot(cant_etas[cant_etas$Región == 2, ]) + # asociamos un data frame a ggplot
 ```
 
 
-# Pre-procesamiento de los datos
+
+# Pre-procesamiento y limpieza de los datos
 
 Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos de alta magnitud y los informes de ETA.
 Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw.
@@ -417,8 +418,6 @@ Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o ig
 Además, de la misma forma como se hizo en la Exploración de los datos, se clasificaron los sismos por Región de Chile.
 De esta manera, se construyó un dataset que tuviera todos los eventos sismológicos disponibles, clasificados por fecha. 
 
-
-# Limpieza de los datos
 
 ## Datos sismológicos
 
@@ -478,6 +477,12 @@ generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
 Mediante esta función, entonces, se logró almacenar un _dataset_ para sismos, indicando en la columna Aumento el Δ: la diferencia entre cuántas ETAs se registraron los _dias_ días posteriores al sismo y los _dias_ días anteriores al sismo.
 
 
+## Datos de enfermedades transmitidas por alimentos
+
+El preprocesamiento y limpieza de estos datos se pudo realizar en los hitos anteriores.
+En este hito se logró estudiar mucho mejor el comportamiento de los datos de aumento según los intervalos de tiempo, y la magnitud, profundidad y región de los eventos sismológicos dados.
+
+
 
 # Minería de datos
 
@@ -509,22 +514,9 @@ Se generaron archivos de texto que almacenaran los resultados para los distintos
 ![Imagen de cómo se calculó _aumento_](Imágenes/aumento.jpg)
 
 
-#### Determinación del umbral para clasificador de ETAs
+## Estudio de ETAs con clustering
 
-Para el nuevo clasificador, fue necesario determinar un umbral con tal de definir la disminución marcada, la disminución tenue, el aumento tenue y el aumento marcado.
-
-Se cargan los datos con la función *generar_datos*, de la forma
-```{r}
-mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
-```
-
-Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
-```{r}
-quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
-```
-
-
-#### Extracción de los sismos y sus Δs
+### Extracción de los sismos y sus Δs
 
 Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos (de 3, 7, 14 y 30 días).
 Se crea una función para trabajar los datos más fácil.
@@ -597,49 +589,156 @@ mag7_14d <- generar_datos(sismos, etas, 7, 14)
 mag7_30d <- generar_datos(sismos, etas, 7, 30)
 ```
 
-#### Aumento registrado según la región
+### Aumento registrado según la región
 
 Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada magnitud y por cada región.
 Además, se puede extraer si se aprecia un aumento según cada magnitud y cada intervalo, obteniendo un resultado en cantidad de ETAs registradas posteriores o anteriores al sismo en promedio.
 
 ```{r, message=FALSE}
-# Magnitud 5 o más
-agg_5_3d <- aggregate(Aumento ~ Region, mag5_3d, FUN=mean)
-(agg_5_7d <- aggregate(Aumento ~ Region, mag5_7d, FUN=mean))
-agg_5_14d <- aggregate(Aumento ~ Region, mag5_14d, FUN=mean)
-agg_5_30d <- aggregate(Aumento ~ Region, mag5_30d, FUN=mean)
+mean <- function(a) {sum(a)/length(a)}
 
-# Aumnento promedio por intervalo considerado para mgnitud mayor o igual a 5
-promedios <- 0
-promedios[1, 1] <- mean(mag5_3d$Aumento)
-promedios[1, 2] <- mean(mag5_7d$Aumento)
-promedios[1, 3] <- mean(mag5_14d$Aumento)
-promedios[1, 4] <- mean(mag5_30d$Aumento)
+# Magnitud 5 o más
+(agg_5_7d <- aggregate(Aumento ~ Region, mag5_7d, FUN=mean))
 
 # Magnitud 6 o más
-agg_6_3d <- aggregate(Aumento ~ Region, mag6_3d, FUN=mean)
 (agg_6_7d <- aggregate(Aumento ~ Region, mag6_7d, FUN=mean))
-agg_6_14d <- aggregate(Aumento ~ Region, mag6_14d, FUN=mean)
-agg_6_30d <- aggregate(Aumento ~ Region, mag6_30d, FUN=mean)
-
-# Aumento promedio por intervalo considerado para magnitud mayor o igual a 6
-promedios[2, 1] <- mean(mag6_3d$Aumento)
-promedios[2, 2] <- mean(mag6_7d$Aumento)
-promedios[2, 3] <- mean(mag6_14d$Aumento)
-promedios[2, 4] <- mean(mag6_30d$Aumento)
 
 # Magnitud 7 o más
-agg_7_3d <- aggregate(Aumento ~ Region, mag7_3d, FUN=mean)
 (agg_7_7d <- aggregate(Aumento ~ Region, mag7_7d, FUN=mean))
-agg_7_14d <- aggregate(Aumento ~ Region, mag7_14d, FUN=mean)
-agg_7_30d <- aggregate(Aumento ~ Region, mag7_30d, FUN=mean)
 
-# Aumnento promedio por intervalo considerado para mgnitud mayor o igual a 5
-promedios[3, 1] <- mean(mag7_3d$Aumento)
-promedios[3, 2] <- mean(mag7_7d$Aumento)
-promedios[3, 3] <- mean(mag7_14d$Aumento)
-promedios[3, 4] <- mean(mag7_30d$Aumento)
 ```
+
+Se aprecia que en general en promedio se registran aumentos en los reportes de ETAs para cada región.
+En la parte de Minería de datos se estudia con mayor detalle este hallazgo.
+
+### Análisis del aumento con boxplot
+
+Se puede estudiar el balance de los datos por cada magnitud según la cantidad de días de intervalo tomados.
+Del resultado anterior se sugiere un aumento en la cantidad de ETAs registradas según la cantidad de días de intervalo considerados para los sismos.
+
+```{r}
+par(mfrow=c(1, 3))
+
+outl_mag5 <- boxplot(mag5_3d$Aumento, mag5_7d$Aumento, mag5_14d$Aumento, mag5_30d$Aumento, main="Aumento para magnitud >= 5\ny 3, 7, 14 y 30 días de intervalo")$out
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+outl_mag6 <- boxplot(mag6_3d$Aumento, mag6_7d$Aumento, mag6_14d$Aumento, mag6_30d$Aumento, main="Aumento para magnitud >= 6\ny 3, 7, 14 y 30 días de intervalo")$out
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+outl_mag7 <- boxplot(mag7_3d$Aumento, mag7_7d$Aumento, mag7_14d$Aumento, mag7_30d$Aumento, main="Aumento para magnitud >= 7\ny 3, 7, 14 y 30 días de intervalo")$out
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+```
+
+Se ve que los datos para 30 días tienen mucha dispersión, y aquellos para 3 días están muy centrados al 0.
+Se aprecia además que hay muchos outliers por lo que se remueven para realizar el _clustering_
+
+```{r}
+mag5_7d_sinout <- mag5_7d[-which(mag5_7d$Aumento %in% outl_mag5), ]
+mag5_14d_sinout <- mag5_14d[-which(mag5_14d$Aumento %in% outl_mag5), ]
+
+mag6_7d_sinout <- mag6_7d[-which(mag6_7d$Aumento %in% outl_mag6), ]
+mag6_14d_sinout <- mag6_14d[-which(mag6_14d$Aumento %in% outl_mag6), ]
+
+mag7_7d_sinout <- mag7_7d[-which(mag7_7d$Aumento %in% outl_mag7), ]
+mag7_14d_sinout <- mag7_14d[-which(mag7_14d$Aumento %in% outl_mag7), ]
+
+
+par(mfrow=c(1, 3))
+
+boxplot(mag5_7d_sinout$Aumento, mag5_14d_sinout$Aumento, main="Aumento para magnitud >= 5\ny 7 y 14 días sin outliers")
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+boxplot(mag6_7d_sinout$Aumento, mag6_14d_sinout$Aumento, main="Aumento para magnitud >= 6\ny 7 y 14 días sin outliers")
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+
+boxplot(mag7_7d_sinout$Aumento, mag7_14d_sinout$Aumento, main="Aumento para magnitud >= 7\ny 7 y 14 días sin outliers")
+lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
+```
+
+
+### Generación de los clusters con K-Means
+
+Como se vio en la sección anterior, se aprecia que los datos están cargados hacia el positivo, es decir, hacia el aumento de los reportes de ETAs.
+
+Dados los hallazgos encontrados en el preprocesamiento y la limpieza de datos, se procedió a realizar un _clustering_ mediante el método de K-Means sobre los datos.
+El objetivo es averiguar si existen grupos de sismos que permitan predecir aumentos o disminuciones de reportes.
+
+Se procede a trabajar para 7 y 14 días puesto que para estos valores se encontraron mejores resultados en la iteración anterior, y porque para los datos de 30 días la dispersión encontrada es muy amplia.
+
+Generación de los datos:
+
+```{r}
+generar_datos_cluster <- function(datos) {
+  x <- data.frame(
+    Magnitud = datos$Magnitud,
+    Profundidad = datos$Profundidad,
+    Region = datos$Region,
+    Aumento = datos$Aumento
+  )
+  (scale(x))
+}
+
+x1 <- generar_datos_cluster(mag5_7d_sinout)
+x2 <- generar_datos_cluster(mag5_14d_sinout)
+x3 <- generar_datos_cluster(mag6_7d_sinout)
+x4 <- generar_datos_cluster(mag6_14d_sinout)
+x5 <- generar_datos_cluster(mag7_7d)
+x6 <- generar_datos_cluster(mag7_14d)
+
+```
+
+Vemos la cantidad de _clusters_ según el método del codo.
+Puesto que los datos de magnitud mayor o igual a 6 incluyen a los de 5, se procede con 5, a 7 días:
+
+```{r}
+elbow_fun <- function (data) {
+  wss <- 0
+  for (i in 1:clust){
+    wss[i] <- sum(kmeans(data, centers=i)$withinss)
+  }
+  wss
+}
+
+
+# Método del codo para 15 clusters, sobre el dataset para magnitud 6 y 7 días de intervalo
+clust <- 15
+
+wss1 <- elbow_fun(x1)
+
+plot(1:clust, wss1, type="b", main="Codo para mag. 5, 7d.", xlab="Nº de clusters", ylab="wss")
+```
+
+Se aprecia que el codo está en torno a los 5 clusters.
+
+Se procede a realizar los clusters con K-Means.
+Para ello se ejecuta el siguiente _script_:
+
+```{r}
+set.seed(3)
+cant_clusters <- 5
+ns <- 20
+
+km.out1 <- kmeans(x1, cant_clusters, nstart=ns)
+km.out2 <- kmeans(x2, cant_clusters, nstart=ns)
+km.out3 <- kmeans(x3, cant_clusters, nstart=ns)
+km.out4 <- kmeans(x4, cant_clusters, nstart=ns)
+km.out5 <- kmeans(x5, cant_clusters, nstart=ns)
+km.out6 <- kmeans(x6, cant_clusters, nstart=ns)
+
+pairs(x1, col=km.out1$cluster, pch=8, main="Clustering para magnitud 5 y 7 días")
+pairs(x2, col=km.out2$cluster, pch=8, main="Clustering para magnitud 5 y 14 días")
+pairs(x3, col=km.out3$cluster, pch=8, main="Clustering para magnitud 6 y 7 días")
+pairs(x4, col=km.out4$cluster, pch=8, main="Clustering para magnitud 6 y 14 días")
+pairs(x5, col=km.out5$cluster, pch=8, main="Clustering para magnitud 7 y 7 días")
+pairs(x6, col=km.out6$cluster, pch=8, main="Clustering para magnitud 7 y 14 días")
+```
+
+
+Se observa que para la región, no se encuentran clusters claros.
+La suposición hecha en el hito anterior de no utilizar la región para clasificar parece haber sido acertada.
+Se observa que para magnitud y profundidad, para las magnitudes 5 y 6 e intervalo de 7 y 14 días, se forman algunos grupos en que los ETAs aumentan y otros en que disminuyen.
+
+Se podría decir que estos grupos sufren una especie de contrarrestación mutua, siendo el _cluster_ con aumentos más claros el de color rojo generado para la magnitud 6, a 7 días de intervalo en la columna de Profundidad, y el color negro en la columna de Magnitud.
 
 
 ## Clasificadores de enfermedades de transmisión alimentaria
@@ -672,6 +771,23 @@ En resumen, la clasificación queda como:
 La razón de clasificar con mayor cantidad de clases es despegarse de posibles variaciones no significativas, en este caso consideradas como variaciones menores a 12 ingresos pre y post sismo.
 De esta manera, se podría decidir de mejor forma si un sismo incide o no en la cantidad de ingresos post sismo.
 Además, el _cluster_ arrojó al menos 4 tipos de sismos distintos, dos distinguibles entre aumento y disminución y dos que no tendrían relación con el aumento.
+
+En la siguiente sección se explica por qué se escogió 12 como umbral.
+
+### Determinación del umbral para clasificador de ETAs
+
+Para el nuevo clasificador, fue necesario determinar un umbral con tal de definir la disminución marcada, la disminución tenue, el aumento tenue y el aumento marcado.
+
+Se cargan los datos con la función *generar_datos*, de la forma
+```{r}
+mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
+```
+
+Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
+```{r}
+quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
+```
+
 
 ### Clasificador de árbol de decisión
 
