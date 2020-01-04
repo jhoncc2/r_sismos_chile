@@ -644,7 +644,7 @@ promedios[3, 4] <- mean(mag7_30d$Aumento)
 
 ## Clasificadores de enfermedades de transmisión alimentaria
 
-De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos clusters relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
+De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos _clusters_ relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
 Además, se observó que, con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
 Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
 
@@ -657,11 +657,6 @@ Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
 ## Cambio en la forma de medir los ingresos hospitalarios
 
 ### Experimentación con los clasificadores expuestos anteriormente
-
-## Resultados
-
-# Anexo
-
 
 ### Ingresos hospitalarios
 
