@@ -645,10 +645,37 @@ promedios[3, 4] <- mean(mag7_30d$Aumento)
 ## Clasificadores de enfermedades de transmisión alimentaria
 
 De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos _clusters_ relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
-Además, se observó que, con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
+Además, se observó que con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
 Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
 
+Para realizar una correcta clasificación, se sugirieron dos conjuntos de clases en base a la cantidad de «Aumento» planteado en las secciones anteriores.
+
+##### 2 clases: aumento o disminución
+
+Clasificador binario. Debe predecir si un sismo produciría aumento en los ingresos o disminución, considerando el 0 como disminución.
+
+Se clasifica de tal forma que si la columna «Aumento» es menor a 0, significa que disminuyó y, si no, aumentó.
+ 
+##### 4 clases: aumento/disminución alto/bajo.
+
+Se establece una graduación a la cantidad de aumento, de tal forma que se distinga entre un aumento (o disminución) grande o bajo. Se justifica por los resultados del _cluster_.
+
+Se considera bajo si el aumento o la disminución es menor a 12 (mayor a -12 en caso de ser disminución), mientras que alto en caso contrario.
+
+En resumen, la clasificación queda como:
+  - Aumento < -12: disminución alta
+  - Aumento <= 0: disminución baja
+  - Aumento <= 12: aumento alto
+  - Caso contrario: aumento alto
+
+
+La razón de clasificar con mayor cantidad de clases es despegarse de posibles variaciones no significativas, en este caso consideradas como variaciones menores a 12 ingresos pre y post sismo.
+De esta manera, se podría decidir de mejor forma si un sismo incide o no en la cantidad de ingresos post sismo.
+Además, el _cluster_ arrojó al menos 4 tipos de sismos distintos, dos distinguibles entre aumento y disminución y dos que no tendrían relación con el aumento.
+
 ### Clasificador de árbol de decisión
+
+Se decidió evaluar el desempeño de un árbol de decisión.
 
 #### Competencia de árboles de decisión
 
