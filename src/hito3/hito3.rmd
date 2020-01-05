@@ -789,13 +789,30 @@ quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
 ```
 
 
+### Evaluación de la influencia de la región o no
+
+Como hipótesis, se plantea que la región no debería influir en los resultados de la clasificación.
+Sin embargo, dado que en el norte se tienen más datos que en el sur de Chile (han habido más sismos y, por consiguiente, más sismos de magnitud mayor a 5), podría observarse una diferencia en las observaciones.
+Por esto, se realizaron experimentos de clasificación considerando las regiones y sin considerarlas.
+
 ### Clasificador de árbol de decisión
 
-Se decidió evaluar el desempeño de un árbol de decisión.
+Se decidió evaluar el desempeño de un árbol de decisión, con el que se intentaría predecir el impacto de los terremotos.
+Para poder observar las decisiones que va considerando el árbol de decisión, se buscó una forma de imprimir gráficamente el árbol, mostrando la iportancia de cada atributo.
+
+Se eligió un árbol de decisión, debido a que las hojas pueden estar en diferentes grupos, sin importar la cantidad que el grupo tenga.
+Así, podría adaptarse a los distintos sismos.
+
 
 #### Competencia de árboles de decisión
 
+Cómo los resultados variaban dependiendo la profundidad con la que se formaban los árboles, se decidió hacerlos competir variando los parámetros profundidad máxima y criterion.
+
 ### Competencia de clasificadores
+
+Como el árbol no arrojó buenos resultados, como se muestra en la sección de resultados, se decidió probar otro tipo de clasificadores.
+Algunos, podrían ser más parecidos a los que se apreció en los _clusters_, como el KNN.
+Sin embargo, se decidió que no se limitaría a investigar el comportamiento de ese solamente, por lo que también se optó por usar un clasificador bayesiano y uno «dummy» que sería bueno para comparar el correcto entrenamiento de los clasificadores.
 
 ## Cambio en la forma de medir los ingresos hospitalarios
 

@@ -74,7 +74,7 @@ def main():
         #print(clf.get_params())
 
         # Exportar árbol
-        exportTreeImage(clf, X, y, p + ".png")
+        #exportTreeImage(clf, X, y, p + ".png")
 
 
 if __name__ == '__main__':
