@@ -45,7 +45,7 @@ def entrenarClasificador(prueba, path_X, path_y):
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
 
-    clf= DecisionTreeClassifier()
+    clf= DecisionTreeClassifier(max_depth=5)
     clf.fit(X_train, y_train)
 
     y_pred= clf.predict(X_test)
@@ -74,7 +74,7 @@ def main():
         #print(clf.get_params())
 
         # Exportar árbol
-        #exportTreeImage(clf, X, y, p + ".png")
+        exportTreeImage(clf, X, y, p + "binario.png")
 
 
 if __name__ == '__main__':

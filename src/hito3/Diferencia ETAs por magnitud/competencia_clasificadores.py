@@ -41,8 +41,8 @@ from sklearn.naive_bayes import GaussianNB  # naive bayes
 from sklearn.neighbors import KNeighborsClassifier
 
 
-path_X = "X5_14d.csv"
-path_y = "y5_14d.csv"
+path_X = "X7_14d.csv"
+path_y = "y7_14d_cat.csv"
 
 print("Leyendo archivo " + path_X)
 X= pd.read_csv(path_X);
