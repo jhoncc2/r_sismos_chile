@@ -26,27 +26,13 @@ library("bookdown")
 
 # Introducción
 
-Los sismos en Chile son fenómenos muy recurrentes. Aun son impredecibles.
+Los sismos en Chile son fenómenos muy recurrentes e impredecibles. El cinturon de fuego del pacifico hace que paises que contiene tengan gran frequencia de sismos. A diferencia de decadas anteriores el numero de sismos detectados incremento significativamente gracias a nuevas estaciones sismico-detectoras instaladas en Chile. 
 
-Los sismos puden tener consecuencias de alto costo humano y economico, por ello es importante no solo intentar predecir su ocurrencia sino también evaluar el efecto que podrían provocar el sismo en otros ámbitos. 
+Los sismos puden tener consecuencias de alto costo humano y economico, por ello es importante no solo intentar predecir su ocurrencia sino también estudiar el efecto que podrían provocar el sismo en otros ámbitos. Es decir el impacto que tiene en otras areas. En este informe nos centraremos en los recursos humanos, por el accesso a estos datos que permite el Departamento de Estadisticas e Informacion de Salud (DEIS) en Chile. 
 
-El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
+Se investiga si eventos sismicos tiene relación con las enfermedades con eventos transmitidas por alimentos (ETA) como tambien impacto al incremento de ingreso a hospitales (IH). El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
 
-Se indaga si eventos sismicos tiene relación con las enfermedades con eventos transmitidas por alimentos (ETA) como tambien .
-
-Desde el Hito 2 se trabajan las hipótesis recién mencionadas, puesto que en el Hito 1 se barajó la posibilidad de basarse en 2 estudios principales mencionados posteriormente.
-Los análisis realizados finalmente indicaron que no habían tales relaciones o no eran claras para los sismos, por lo menos para Chile.
-
-Conjunto de _dataset_ actualmente utilizado:
-
-_Dataset_             | Objetivo del dataset
---------------------- | --------------------
-Datos sismológicos    | Extraer los datos de sismos y poder compararlos con los egresos y las ETAs
-Egresos hospitalarios | Dado un sismo, experimentar el aumento o la disminución de egresos hospitalarios
-ETAs                  | Dado un sismo, experimentar el aumento o la disminución de enfermedades transmitidas por alimentos.
-
-Las tablas de Egresos hospitalarios y de ETAs tienen mayor cardinalidad que la de datos sismológicos.
-
+Nota. Desde el Hito 2 se trabajan las hipótesis recién mencionadas, puesto que en el Hito 1 se barajó la posibilidad de basarse en el estudio de la relacion entre eventos fluviales y los sismos. Este informe incluye este analisis con fines informativos. Los análisis finalmente indicaron que las relaciones no son claras para los sismos, por lo menos para Chile.
 
 ## Hipótesis
 
@@ -79,13 +65,22 @@ Al tratarse de una extensión y mejora del hito 2, no se realiza cambios en las 
 
 # Metodología
 
-Se busca juntar los datasets para buscar las correlaciones mencionadas en las hipótesis.
-La forma de juntarlos es mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron.
-De esta manera se buscará la correlación entre los eventos planteados para confirmar o rechazar las hipótesis.
+Se busca juntar los datasets para buscar las correlaciones mencionadas en las hipótesis. La forma de juntarlos es mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron. De esta manera se buscará la correlación entre los eventos planteados para confirmar o rechazar las hipótesis.
 
 Se procedió a continuar con lo realizado en el hito anterior, haciendo las proyecciones especificadas ahí y también nuevas ideas pensadas posteriormente.
 
 # Descripción de los datos
+
+## Fuente de Datos
+Conjunto de _dataset_ actualmente utilizado:
+
+_Dataset_             | Objetivo del dataset
+--------------------- | --------------------
+Datos sismológicos    | Extraer los datos de sismos y poder compararlos con los egresos y las ETAs
+Egresos hospitalarios | Dado un sismo, experimentar el aumento o la disminución de egresos hospitalarios
+ETAs                  | Dado un sismo, experimentar el aumento o la disminución de enfermedades transmitidas por alimentos.
+
+Las tablas de Egresos hospitalarios y de ETAs tienen mayor cardinalidad que la de datos sismológicos.
 
 ## Datos sismológicos
 
@@ -188,33 +183,12 @@ El gráfico de abajo muestra la cantidad de reportes recolectados por año, dent
 library(tidyverse)
 library(lubridate)
 
-# create new columns 
-
-dtime = as.Date(data$Time)
-season_data <-  mutate(data,
-  year = year(dtime),
-  month = month(dtime),
-  mday = mday(dtime)
-)
-
-# consider the limitation of seasons simply by looking into range of values
-# we bound the seasons by month value, 
-# we round the days of the season boundary. E.g. Sept 21 -> OCT
-
-season_data <- mutate(season_data,
-  season = case_when (
-      month >= 4 & month <= 6 ~ "otonio",
-      month >= 7 & month <= 9 ~ "invierno",
-      month >= 10 & month <= 12 ~ "primavera",
-      month >= 1 & month <= 3 ~ "verano"
-    )
-)
-
 ggplot(season_data, mapping = aes(x=year)) +
   geom_bar()
+
 ```
 
-![Relacion lluvia y sismos](img/sis_hist.png)
+![Cantidad de sismos por anio](img/sis_hist.png)
 
 ## Datos de precipitaciones fluviales
 
