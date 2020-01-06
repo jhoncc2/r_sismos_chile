@@ -1,0 +1,36 @@
+Leyendo archivo X6_14d.csv
+Success
+Leyendo archivo y6_14d_cat.csv
+Success
+----------------
+Resultados para clasificador:  Base Dummy
+Precision promedio: 0.31734917970917964
+Recall promedio: 0.2912
+F1-score promedio: 0.28493039675184
+----------------
+
+
+----------------
+Resultados para clasificador:  Decision Tree
+Precision promedio: 0.29914288933288935
+Recall promedio: 0.2716
+F1-score promedio: 0.26893306454700533
+----------------
+
+
+----------------
+Resultados para clasificador:  Gaussian Naive Bayes
+Precision promedio: 0.2681247261059187
+Recall promedio: 0.28519999999999995
+F1-score promedio: 0.23373182632714543
+----------------
+
+
+----------------
+Resultados para clasificador:  KNN
+Precision promedio: 0.220177534337008
+Recall promedio: 0.18959999999999996
+F1-score promedio: 0.1826686267078818
+----------------
+
+

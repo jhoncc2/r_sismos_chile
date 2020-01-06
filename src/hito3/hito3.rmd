@@ -83,6 +83,7 @@ Se busca juntar los datasets para buscar las correlaciones mencionadas en las hi
 La forma de juntarlos es mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron.
 De esta manera se buscará la correlación entre los eventos planteados para confirmar o rechazar las hipótesis.
 
+Se procedió a continuar con lo realizado en el hito anterior, haciendo las proyecciones especificadas ahí y también nuevas ideas pensadas posteriormente.
 
 # Descripción de los datos
 
@@ -741,8 +742,35 @@ Se podría decir que estos grupos sufren una especie de contrarrestación mutua,
 ## Clasificadores de enfermedades de transmisión alimentaria
 
 De acuerdo a lo observado en la sección anterior, se justifica realizar un clasificador, debido a que se logran apreciar algunos _clusters_ relacionados con la profundidad y la magnitud del sismo y el aumento de los ingresos por enfermedades de transmisión alimentaria.
-Además, se observó que, con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
+Además, se observó que con sismos mayores o iguales a magnitud 6, los ingresos aumentaban y se mantenían en un valor positivo de diferencia respecto a la cantidad posterior al sismo y anterior a él.
 Con los magnitud 7 se observó un aumento de los ingresos post sismo siempre.
+
+Para realizar una correcta clasificación, se sugirieron dos conjuntos de clases en base a la cantidad de «Aumento» planteado en las secciones anteriores.
+
+##### 2 clases: aumento o disminución
+
+Clasificador binario. Debe predecir si un sismo produciría aumento en los ingresos o disminución, considerando el 0 como disminución.
+
+Se clasifica de tal forma que si la columna «Aumento» es menor a 0, significa que disminuyó y, si no, aumentó.
+ 
+##### 4 clases: aumento/disminución alto/bajo.
+
+Se establece una graduación a la cantidad de aumento, de tal forma que se distinga entre un aumento (o disminución) grande o bajo. Se justifica por los resultados del _cluster_.
+
+Se considera bajo si el aumento o la disminución es menor a 12 (mayor a -12 en caso de ser disminución), mientras que alto en caso contrario.
+
+En resumen, la clasificación queda como:
+  - Aumento < -12: disminución alta
+  - Aumento <= 0: disminución baja
+  - Aumento <= 12: aumento alto
+  - Caso contrario: aumento alto
+
+
+La razón de clasificar con mayor cantidad de clases es despegarse de posibles variaciones no significativas, en este caso consideradas como variaciones menores a 12 ingresos pre y post sismo.
+De esta manera, se podría decidir de mejor forma si un sismo incide o no en la cantidad de ingresos post sismo.
+Además, el _cluster_ arrojó al menos 4 tipos de sismos distintos, dos distinguibles entre aumento y disminución y dos que no tendrían relación con el aumento.
+
+En la siguiente sección se explica por qué se escogió 12 como umbral.
 
 ### Determinación del umbral para clasificador de ETAs
 
@@ -758,11 +786,31 @@ Luego se determinó el número para el umbral observando el comportamiento parec
 quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
 ```
 
+
+### Evaluación de la influencia de la región o no
+
+Como hipótesis, se plantea que la región no debería influir en los resultados de la clasificación.
+Sin embargo, dado que en el norte se tienen más datos que en el sur de Chile (han habido más sismos y, por consiguiente, más sismos de magnitud mayor a 5), podría observarse una diferencia en las observaciones.
+Por esto, se realizaron experimentos de clasificación considerando las regiones y sin considerarlas.
+
 ### Clasificador de árbol de decisión
+
+Se decidió evaluar el desempeño de un árbol de decisión, con el que se intentaría predecir el impacto de los terremotos.
+Para poder observar las decisiones que va considerando el árbol de decisión, se buscó una forma de imprimir gráficamente el árbol, mostrando la iportancia de cada atributo.
+
+Se eligió un árbol de decisión, debido a que las hojas pueden estar en diferentes grupos, sin importar la cantidad que el grupo tenga.
+Así, podría adaptarse a los distintos sismos.
+
 
 #### Competencia de árboles de decisión
 
+Cómo los resultados variaban dependiendo la profundidad con la que se formaban los árboles, se decidió hacerlos competir variando los parámetros profundidad máxima y criterion.
+
 ### Competencia de clasificadores
+
+Como el árbol no arrojó buenos resultados, como se muestra en la sección de resultados, se decidió probar otro tipo de clasificadores.
+Algunos, podrían ser más parecidos a los que se apreció en los _clusters_, como el KNN.
+Sin embargo, se decidió que no se limitaría a investigar el comportamiento de ese solamente, por lo que también se optó por usar un clasificador bayesiano y uno «dummy» que sería bueno para comparar el correcto entrenamiento de los clasificadores.
 
 ## Cambio en la forma de medir los ingresos hospitalarios
 
@@ -775,6 +823,423 @@ quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
 
 ## Clasificador para enfermedades de transmisión alimentaria
 
+### Resultados clasificador de árbol de decisión
+
+Las siguientes librerías son necesarias para ejecutar los scripts:
+```{python}
+import numpy as np
+import pandas as pd
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+
+# Imports para el exportador de árbol
+from sklearn.externals.six import StringIO
+from IPython.display import Image
+from sklearn.tree import export_graphviz
+from sklearn import tree
+import pydotplus
+
+# Directorio donde están los datos para el clasificador
+datos_dir= "Diferencia ETAs por magnitud/"
+```
+
+
+  
+#### Clasificador binario
+
+Este es el clasificador que se usó para las clases de «Aumento» o «Disminución».
+
+```{python}
+def exportTreeImage(dtree, X, y, path):
+    # Create dot data
+    dot_data = tree.export_graphviz(dtree, out_file=None,
+            filled=True,
+            rounded=True, special_characters=True,
+            feature_names=X.columns.tolist(),
+            class_names=['Disminución', 'Aumento'])
+
+    # Draw graph
+    graph = pydotplus.graph_from_dot_data(dot_data)
+
+    # Show graph
+    Image(graph.create_png())
+
+    # Create PNG
+    graph.write_png(path)
+    
+
+def entrenarClasificador(prueba, path_X, path_y):
+    print("########## Inicio de entrenamiento ###########")
+    print(type(prueba))
+    print("Leyendo archivo " + path_X)
+    X= pd.read_csv(path_X);
+    print("Success")
+    print("Leyendo archivo " + path_y)
+    y= pd.read_csv(path_y);
+    print("Success")
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
+
+    clf= DecisionTreeClassifier(max_depth=5)
+    clf.fit(X_train, y_train)
+
+    y_pred= clf.predict(X_test)
+
+    print("Accuracy en test set:", accuracy_score(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+
+    print("########### Fin de entrenamiento #############") 
+    print("##############################################")
+
+    return clf, X, y, X_train, y_train, X_test, y_test
+
+
+def main():
+
+    pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
+    
+    for p in pruebas:
+    
+        clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
+                                                datos_dir + "X" + p + ".csv",
+                                                datos_dir + "y" + p + ".csv")
+
+        # Exportar árbol
+        #exportTreeImage(clf, X, y, p + "binario.png")
+main()
+```
+
+
+#### Clasificador de 4 clases
+
+Este es el clasificador utilizado para las clases de Aumento/Disminución Alta/Baja.
+```{python}
+def exportTreeImage(dtree, X, y, path):
+    # Create dot data
+    dot_data = tree.export_graphviz(dtree, out_file=None,
+            filled=True,
+            rounded=True, special_characters=True,
+            feature_names=X.columns.tolist(),
+            class_names=['Alta_Dism.', 'Baja_Dism.','Bajo_Aum.', 'Alto_Aum.'])
+
+    # Draw graph
+    graph = pydotplus.graph_from_dot_data(dot_data)
+
+    # Show graph
+    Image(graph.create_png())
+
+    # Create PNG
+    graph.write_png(path)
+    
+
+def entrenarClasificador(prueba, path_X, path_y):
+    print("##############################################")
+    print("########## Inicio de entrenamiento ###########")
+    print(type(prueba))
+    print("Leyendo archivo " + path_X)
+    X= pd.read_csv(path_X);
+    print("Success")
+    print("Leyendo archivo " + path_y)
+    y= pd.read_csv(path_y);
+    print("Success")
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=9, stratify=y)
+
+    clf= DecisionTreeClassifier(max_depth=5)
+    clf.fit(X_train, y_train)
+
+    y_pred= clf.predict(X_test)
+
+    print("Accuracy en test set:", accuracy_score(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+
+    print("########### Fin de entrenamiento #############") 
+    print("##############################################")
+
+    return clf, X, y, X_train, y_train, X_test, y_test
+
+
+def main():
+
+    pruebas= ["5_7d", "5_14d", "6_7d", "6_14d", "7_7d", "7_14d"]
+
+    for p in pruebas:
+    
+        print("##########################################")
+        print("Clasificador con región")
+        clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
+                                                datos_dir + "X" + p + ".csv",
+                                                datos_dir + "y" + p + "_cat.csv")
+
+        # Exportar árbol
+        #exportTreeImage(clf, X, y, p + ".png")
+
+        print("##########################################")
+        print("Clasificador sin región")
+        clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
+                                                datos_dir + "X" + p + "_sin_reg.csv",
+                                                datos_dir + "y" + p + "_cat.csv")
+        #exportTreeImage(clf, X, y, p + "sin_reg.png")
+        
+main()
+```
+
+
+Los resultados gráficos de los árboles presentados son los que se presentan a continuación.
+Se mostrarán solo algunos, pero los demás pueden verse en la carpeta «Diferencia ETAs por magnitud».
+
+Aquí se pueden observar los resultdos distintos de árboles que se obtuvieron para los 14 días, con magnitudes de sismo mayores o iguales a 5.
+Se tienen muestras con los datos sin considerar las regiones, considerándolas y con 4 y 2 clases.
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5 con dos clases](Diferencia ETAs por magnitud/5_14dbinario.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5 con 4 clases](Diferencia ETAs por magnitud/5_14d.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5 con 4 clases y sin considerar las regiones](Diferencia ETAs por magnitud/5_14dsin_reg.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 6 con 4 clases](Diferencia ETAs por magnitud/6_14d.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 6 con 4 clases, sin considerar las regiones](Diferencia ETAs por magnitud/6_14dsin_reg.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 7 con 4 clases. Nota: en este caso, se imprimen mal los nombres de las clases, pues no se presentan todas. Alta disminución corresponde a Bajo aumento. Baja disminución corresponde a Alto aumento.](Diferencia ETAs por magnitud/7_14d.png)
+
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 7 con 4 clases. Nota: en este caso, se imprimen mal los nombres de las clases, pues no se presentan todas. Alta disminución corresponde a Bajo aumento. Baja disminución corresponde a Alto aumento.](Diferencia ETAs por magnitud/7_14dsin_reg.png)
+
+Como norma general, se puede apreciar que las regiones se presentan muy arriba en el árbol.
+Es decir, se llevan la mayor cantidad del peso de las decisiones que este toma.
+Esto puede deberse a que la mayor cantidad de sismos de los que se tiene registro pueden alterar los resultados.
+El caso extremo fue analizar los sismo de magnitud mayor o igual a 7, en los cuales la región fue el único parámetro utilizado para clasificar los sismos.
+Por esta razón, se decidió corroborar la información con los mismos datos, pero sin considerar las regiones.
+
+Sin las regiones, se obtuvieron árboles más pequeños en general, lo que habla también de una posible mejoría respecto a evitar sobreajustes.
+
+A pesar de esto, como muestran los resultados de arriba, el árbol es bastante malo para encontrar las clases, en todos los casos.
+El accuracy y el recall son muy bajos para ser considerado un clasificador efectivo.
+
+Se observa que la decisión de aumentar la cantidad de clases disminuyó el accuracy y el recall, por lo que no fue una medida efectiva.
+
+El mejor de todos fue el clasificador que usó los datos de magnitud 6 para 7 días binario, como en el hito anterior.
+
+
+### Resultados de la competencia de clasificadores
+
+Se tomaron magnitudes distintas para evaluar los clasificadores: 5, 6, y 7, de 14 días todos, que fueron los que tuvieron mejor capacidad predictiva según los resultados anteriores.
+
+Además, se realizó competencia para aquellos binarios (con dos clases) y los con 4 clases.
+El código se encuentra en los anexos.
+
+#### Binarios
+##### Magnitud 5, 14 días
+----------------
+
+Resultados para clasificador:  Base Dummy
+
+Precision promedio: 0.5057435931464518
+
+Recall promedio: 0.5035205992509363
+  
+F1-score promedio: 0.5032128058844465
+
+----------------
+
+----------------
+
+Resultados para clasificador:  Decision Tree
+
+Precision promedio: 0.5372547395781313
+
+Recall promedio: 0.5334831460674156
+
+F1-score promedio: 0.5334884367150398
+
+----------------
+
+----------------
+
+Resultados para clasificador:  Gaussian Naive Bayes
+
+Precision promedio: 0.5778510470900172
+
+Recall promedio: 0.5755430711610486
+
+F1-score promedio: 0.565797022911816
+
+----------------
+
+----------------
+
+Resultados para clasificador:  KNN
+
+Precision promedio: 0.5358593799236964
+
+Recall promedio: 0.5362921348314607
+
+F1-score promedio: 0.5345539655623789
+
+----------------
+
+#### Con 4 clases
+
+##### Magnitud 5, 14 días
+
+---------------- 
+
+Resultados para clasificador:  Base Dummy 
+
+Precision promedio: 0.2543251271511943 
+
+Recall promedio: 0.25168539325842704 
+
+F1-score promedio: 0.2513672342633679 
+
+---------------- 
+ 
+----------------
+
+Resultados para clasificador:  Decision Tree 
+
+Precision promedio: 0.28198277519152576 
+
+Recall promedio: 0.2779026217228464 
+
+F1-score promedio: 0.277833332404425 
+
+----------------
+
+----------------
+
+Resultados para clasificador:  Gaussian Naive Bayes
+
+Precision promedio: 0.28500778188199705
+
+Recall promedio: 0.3156554307116105
+
+F1-score promedio: 0.2559771146372389
+
+----------------
+
+----------------
+
+Resultados para clasificador:  KNN
+
+Precision promedio: 0.29402535668893387
+
+Recall promedio: 0.2847191011235955
+
+F1-score promedio: 0.28464672910000527
+
+----------------
+
+
+
+##### Magnitud 6, 14 días
+----------------
+
+Resultados para clasificador:  Base Dummy
+
+Precision promedio: 0.31734917970917964
+
+Recall promedio: 0.2912
+
+F1-score promedio: 0.28493039675184
+
+----------------
+
+----------------
+
+Resultados para clasificador:  Decision Tree
+
+Precision promedio: 0.29914288933288935
+
+Recall promedio: 0.2716
+
+F1-score promedio: 0.26893306454700533
+
+----------------
+
+---------------- 
+
+Resultados para clasificador:  Gaussian Naive Bayes 
+
+Precision promedio: 0.2681247261059187
+
+Recall promedio: 0.28519999999999995
+
+F1-score promedio: 0.23373182632714543
+
+----------------
+
+----------------
+
+Resultados para clasificador:  KNN
+
+Precision promedio: 0.220177534337008
+
+Recall promedio: 0.18959999999999996
+
+F1-score promedio: 0.1826686267078818
+
+----------------
+
+##### Magnitud 7, 14 días
+
+---------------- 
+
+Resultados para clasificador:  Base Dummy 
+
+Precision promedio: 0.5138888888888888 
+
+Recall promedio: 0.43000000000000005 
+
+F1-score promedio: 0.41966666666666663 
+
+---------------- 
+ 
+----------------
+
+Resultados para clasificador:  Decision Tree 
+
+Precision promedio: 0.8622222222222221 
+
+Recall promedio: 0.8433333333333333 
+
+F1-score promedio: 0.8326666666666666 
+
+----------------
+
+----------------
+
+Resultados para clasificador:  Gaussian Naive Bayes
+
+Precision promedio: 0.6283333333333334
+
+Recall promedio: 0.6366666666666667
+
+F1-score promedio: 0.6016666666666667
+
+----------------
+
+----------------
+
+Resultados para clasificador:  KNN
+
+Precision promedio: 0.4461111111111111
+
+Recall promedio: 0.5033333333333333
+
+F1-score promedio: 0.43833333333333324
+
+----------------
+
+
+Se observa que, en general, todos los clasificadores se asemejan al clasificador Dummy en los resultados.
+Se concluye, entonces que los clasificadores no fueron una buena herramienta, probablemente debido a la falta de datos (en general fueron pocos, por la falta de sismos fuertes) o a distintos comportamientos entre regiones.
+En este sentido, para el futuro podrían aislarse las regiones y probar por cada una de ellas, para que el clasificador se «adapte» a su región en particular.
 
 ## Clasificador para ingresos hospitalarios
 
@@ -795,5 +1260,74 @@ agregarFechasEtas <- function(dataframe) {
   cbind(dataframe, fechas)
 }
 ```
+
+
+```{python}
+#################################
+# Competencia de clasificadores #
+#################################
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score, recall_score, precision_score
+
+
+def run_classifier(clf, X, y, num_tests=100):
+    metrics = {'f1-score': [], 'precision': [], 'recall': []}
+    
+
+    
+    for _ in range(num_tests):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.30)
+        
+        clf.fit(X_train, y_train)
+        
+        predictions = clf.predict(X_test)
+        
+        metrics['y_pred'] = predictions
+        metrics['y_prob'] = clf.predict_proba(X_test)[:,1]
+        metrics['f1-score'].append(f1_score(y_test, predictions, average='weighted')) 
+        metrics['recall'].append(recall_score(y_test, predictions, average='weighted'))
+        metrics['precision'].append(precision_score(y_test, predictions, average='weighted'))
+    
+    return metrics
+
+import pandas as pd
+
+from sklearn.dummy import DummyClassifier
+from sklearn.svm import SVC  # support vector machine classifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB  # naive bayes
+from sklearn.neighbors import KNeighborsClassifier
+
+
+path_X = datos_dir + "X7_14d.csv"
+path_y = datos_dir + "y7_14d_cat.csv"
+
+print("Leyendo archivo " + path_X)
+X= pd.read_csv(path_X);
+print("Success")
+print("Leyendo archivo " + path_y)
+y= pd.read_csv(path_y);
+print("Success")
+
+c0 = ("Base Dummy", DummyClassifier(strategy='stratified'))
+c1 = ("Decision Tree", DecisionTreeClassifier())
+c2 = ("Gaussian Naive Bayes", GaussianNB())
+c3 = ("KNN", KNeighborsClassifier(n_neighbors=5))
+
+classifiers = [c0,c1, c2, c3]
+
+results = {}
+for name, clf in classifiers:
+    metrics = run_classifier(clf, X, y)   # hay que implementarla en el bloque anterior.
+    results[name] = metrics
+    print("----------------")
+    print("Resultados para clasificador: ",name) 
+    print("Precision promedio:",np.array(metrics['precision']).mean())
+    print("Recall promedio:",np.array(metrics['recall']).mean())
+    print("F1-score promedio:",np.array(metrics['f1-score']).mean())
+    print("----------------\n\n")
+```
+
 
 
