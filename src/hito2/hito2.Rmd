@@ -923,7 +923,8 @@ for p in pruebas:
     print()
 
 ```
-Código clasificador para Ingresos de pacientes a Hospitales
+
+Código clasificador para Ingresos de pacientes a Hospitales.
 ```{python eval=FALSE}
 
 import pandas as pd
@@ -935,28 +936,14 @@ from sklearn import metrics, model_selection
 from sklearn.metrics import f1_score, recall_score, precision_score, classification_report, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn.utils.multiclass import unique_labels
+from sklearn.utils import resample
+
 
 from sklearn.dummy import DummyClassifier
 from sklearn.svm import SVC  # support vector machine classifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB  # naive bayes
 from sklearn.neighbors import KNeighborsClassifier
-
-
-testSismos = '/Users/jhonc/Workspace/data-mining/repo/r_sismos_chile/src/hito2/SismosClasificador.csv'
-data = pd.read_csv(testSismos)  # abrimos el archivo csv y lo cargamos en data.
-names = list(data)
-for name in names:
-    if "Unnamed" in name:
-        data.pop(name)
-# data.columns
-
-#### select columns
-X = data[['Depth', 'Magnitude', 'Region_Arica_Parinacota', 'Region_Tarapaca', 'Region_Antofagasta', 'Region_Atacama',
- 'Region_Coquimbo', 'Region_Valparaiso', 'Region_Metropolitana_Santiago', 'Region_Libertador_General_OHiggins', 'Region_Maule',
- 'Region_Nuble', 'Region_Biobio', 'Region_Araucania', 'Region_Rios', 'Region_Lagos', 'Region_Aysen_General_Carlos_Ibanez',
- 'Region_Magallanes_Antartica']]      ## datos, caracteristicas o features de cada ¿Sismo?. 
-y = data['class']    ## ¿clase? para cada instancia anterior.
 
 #### define util functions
 def run_classifier(clf, X, y, num_tests=100):
@@ -965,80 +952,85 @@ def run_classifier(clf, X, y, num_tests=100):
     for _ in range(num_tests):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.30)
         
+        # concatenate our training data back together
+        XE = pd.concat([X_train, y_train], axis=1)
+
+        d = {}
+        d[0] = XE[XE['class']==0]
+        d[1] = XE[XE['class']==1]
+        d[2] = XE[XE['class']==2]
+        d[3] = XE[XE['class']==3]
+
+        c = [len(d[k]) for k in d] 
+        i = c.index(max(c))
+#         print([len(d[k]) for k in d] )
+        for key in d:
+            d[key] = resample(d[key],
+                      replace=True, # sample with replacement
+                      n_samples=len(d[i]), # match number in majority class
+                      random_state=27) # reproducible results
+            
+        oversampled = d[0]
+        type(XE)
+        for k in range(1,4): 
+          oversampled = pd.concat([oversampled, d[k]])
+
+        X_train = oversampled.iloc[:,:-1]
+        y_train = oversampled.iloc[:,-1]
+        
+        ### start training
         clf.fit(X_train, y_train)
         predictions = clf.predict(X_test)
         y_train_pred = clf.predict(X_train)
         
+        
+        
         metrics['y_pred'] = predictions
+        metrics['y_true'] = y_test
         metrics['y_prob'] = clf.predict_proba(X_test)[:,1]
-        metrics['f1-score'].append(f1_score(y_test, predictions)) 
-        metrics['recall'].append(recall_score(y_test, predictions))
-        metrics['precision'].append(precision_score(y_test, predictions))
+        metrics['f1-score'].append(f1_score(y_test, predictions, average=None)) 
+        metrics['recall'].append(recall_score(y_test, predictions, average=None))
+        metrics['precision'].append(precision_score(y_test, predictions, average=None))
     
     return metrics
-
-def plot_confusion_matrix(y_true, y_pred,
-                          normalize=False,
-                          title=None,
-                          cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
-    """
-    # Compute confusion matrix
-    cm = confusion_matrix(y_true, y_pred) 
     
-    # Only use the labels that appear in the data
-    #classes = classes[unique_labels(y_true, y_pred)]
-    classes = ['class']
-   
-    fig, ax = plt.subplots()
-    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-    ax.figure.colorbar(im, ax=ax)
-    # We want to show all ticks...
-    ax.set(xticks=np.arange(cm.shape[1]),
-           yticks=np.arange(cm.shape[0]),
-           # ... and label them with the respective list entries
-           xticklabels=classes, yticklabels=classes,
-           title=title,
-           ylabel='True label',
-           xlabel='Predicted label')
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
-
-    # Loop over data dimensions and create text annotations.
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            ax.text(j, i, format(cm[i, j], fmt),
-                    ha="center", va="center",
-                    color="white" if cm[i, j] > thresh else "black")
-    fig.tight_layout()
-    return ax
-
-
-######### run classifiers #########
+def multi_class_experiment(file_data_uri):
+    
+    data = pd.read_csv(file_data_uri)  # abrimos el archivo csv y lo cargamos en data.
+    names = list(data)
+    for name in names:
+        if "Unnamed" in name:
+            data.pop(name)
+    # data.columns
+    X = data[['Depth', 'Magnitude', 'Region_Arica_Parinacota', 'Region_Tarapaca', 'Region_Antofagasta', 'Region_Atacama',
+     'Region_Coquimbo', 'Region_Valparaiso', 'Region_Metropolitana_Santiago', 'Region_Libertador_General_OHiggins', 'Region_Maule',
+     'Region_Nuble', 'Region_Biobio', 'Region_Araucania', 'Region_Rios', 'Region_Lagos', 'Region_Aysen_General_Carlos_Ibanez',
+     'Region_Magallanes_Antartica']]      ## datos, caracteristicas o features de cada ¿Sismo?. 
+    y = data['class']    ## ¿clase? para cada instancia anterior.
+    class_names = ['incremento', 'decremento']
 
     
-c0 = ("Base Dummy", DummyClassifier(strategy='stratified'))
-c1 = ("Decision Tree", DecisionTreeClassifier())
-c2 = ("Gaussian Naive Bayes", GaussianNB())
-c3 = ("KNN", KNeighborsClassifier(n_neighbors=5))
+    c0 = ("Base Dummy", DummyClassifier(strategy='stratified'))
+    c1 = ("Decision Tree", DecisionTreeClassifier())
+    c2 = ("Gaussian Naive Bayes", GaussianNB())
+    c3 = ("KNN", KNeighborsClassifier(n_neighbors=5))
 
-classifiers = [c0,c1, c2, c3]
+    classifiers = [c0, c1, c2, c3]
+    results = {}
 
-results = {}
-for name, clf in classifiers:
-    metrics = run_classifier(clf, X, y, num_tests=20)   # hay que implementarla en el bloque anterior.
-    results[name] = metrics
-    print("----------------")
-    print("Resultados para clasificador: ",name) 
-    print("Precision promedio:",np.array(metrics['precision']).mean())
-    print("Recall promedio:",np.array(metrics['recall']).mean())
-    print("F1-score promedio:",np.array(metrics['f1-score']).mean())
-    print("----------------\n\n")
+    for name, clf in classifiers:
+        metrics = run_classifier(clf, X, y, num_tests=20) # hay que implementarla en el bloque anterior.
+        results[name] = metrics
+        print("----------------")
+        print("Resultados para clasificador: ",name) 
+        print("Precision promedio:",np.array(metrics['precision']).mean())
+        print("Recall promedio:",np.array(metrics['recall']).mean())
+        print("F1-score promedio:",np.array(metrics['f1-score']).mean())
+        print("----------------\n\n")
+
+    for name, clf in classifiers:
+        metrics = plot_confusion_matrix(results[name]['y_true'], results[name]['y_pred'], title = name)
+    
 ```
 
 

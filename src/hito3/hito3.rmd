@@ -30,7 +30,7 @@ Los sismos en Chile son fenómenos muy recurrentes e impredecibles. El cinturon 
 
 Los sismos puden tener consecuencias de alto costo humano y economico, por ello es importante no solo intentar predecir su ocurrencia sino también estudiar el efecto que podrían provocar el sismo en otros ámbitos. Es decir el impacto que tiene en otras areas. En este informe nos centraremos en los recursos humanos, por el accesso a estos datos que permite el Departamento de Estadisticas e Informacion de Salud (DEIS) en Chile. 
 
-Se investiga si eventos sismicos tiene relación con las enfermedades con eventos transmitidas por alimentos (ETA) como tambien impacto al incremento de ingreso a hospitales (IH). El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
+Se investiga si eventos sismicos tiene relación con las Enfermedades Transmitidas por Alimentos (ETA) como tambien impacto al incremento de Ingresos a Hospitales (IH). El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
 
 Nota. Desde el Hito 2 se trabajan las hipótesis recién mencionadas, puesto que en el Hito 1 se barajó la posibilidad de basarse en el estudio de la relacion entre eventos fluviales y los sismos. Este informe incluye este analisis con fines informativos. Los análisis finalmente indicaron que las relaciones no son claras para los sismos, por lo menos para Chile.
 
@@ -674,10 +674,11 @@ Se establece una graduación a la cantidad de aumento, de tal forma que se disti
 Se considera bajo si el aumento o la disminución es menor a 12 (mayor a -12 en caso de ser disminución), mientras que alto en caso contrario.
 
 En resumen, la clasificación queda como:
-  - Aumento < -12: disminución alta
-  - Aumento <= 0: disminución baja
-  - Aumento <= 12: aumento alto
-  - Caso contrario: aumento alto
+
+* Aumento < -12: disminución alta
+* Aumento <= 0: disminución baja
+* Aumento <= 12: aumento alto
+* Caso contrario: aumento alto
 
 
 La razón de clasificar con mayor cantidad de clases es despegarse de posibles variaciones no significativas, en este caso consideradas como variaciones menores a 12 ingresos pre y post sismo.
@@ -939,8 +940,9 @@ El código se encuentra en los anexos.
 
 #### Binarios
 **Magnitud 5, 14 días**
+
 Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
----------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- |
 Precision promedio |  0.5057435931464518|0.5372547395781313|0.5778510470900172|0.5358593799236964
 Recall promedio | 0.5035205992509363|0.5334831460674156|0.5755430711610486|0.5362921348314607
 F1-score promedio | 0.5032128058844465|0.5334884367150398|0.565797022911816|0.5345539655623789
@@ -1009,7 +1011,6 @@ boxplot(d1$ING_DIFF,d2$ING_DIFF,d3$ING_DIFF, names=c("3","7","14"))
 ![Densidad para sismos >= 5 y diferencia entre incremento y decremento con delta = {3,7,14}](img/ing_density.png)
 
 
-Hacemos el mismo analysis que 
 ### Clasificador binario
 Clasificamos los datos binarios de los sismos, como _incremento_ o _decremento_. Utilizando el mismo analysis que en ETA. Obtenemos los datos utilizando un simple algoritmo utilizando la diferencia ya mencionada previamente.
 
@@ -1049,16 +1050,19 @@ quantile(d1$ING_DIFF, prob=seq(0, 1, length = 11))
 summary(d1$ING_DIFF)
 ```
 ![](img/uh_quantile_summ.png)
-La diferencia en ingresos se encuentra inclinada negativamente. En este caso la informacion mas sensible se encuentra en los incrementos, que es lo que desamos clasificar y predecir en un futuro. Entonces tomamos los el cuantil positivo (3rd cuantil) y utilizamos un umbral de valor == 75.
+La diferencia en ingresos se encuentra inclinada negativamente. En este caso la informacion mas sensible se encuentra en los incrementos, que es lo que desamos clasificar y predecir en un futuro. Entonces tomamos los el cuantil positivo (3rd cuantil) y utilizamos un umbral de valor = 75.
 
 En resumen, la clasificación queda como:
-  - Aumento < -75: disminución alta
-  - Aumento <= 0: disminución baja
-  - Aumento <= 75: aumento bajo
-  - Caso contrario: aumento alto
+
+
+* Aumento < -75: disminución alta
+* Aumento <= 0: disminución baja
+* Aumento <= 75: aumento bajo
+* Caso contrario: aumento alto
 
 
 *Resultados de clasificadores con magnitud >= 5 y delta = 3*
+
 Classificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
 ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
 Precision promedio | 0.2507327576140339|0.3876901299003524|0.5058967666134677|0.3543702834338281
@@ -1066,6 +1070,7 @@ Recall promedio | 0.25038281649044|0.39663779445334424|0.44343383481408|0.363452
 F1-score promedio | 0.2439288784869155|0.38944852613051834|0.3789695690938443|0.3546972245298021
 
 *Resultados de clasificadores con magnitud >= 5 y delta = 7*
+
 Classificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
 ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
 Precision promedio | 0.24512935121337415|0.3583267783121016|0.4804950794067688|0.33050904858478936
@@ -1073,6 +1078,7 @@ Recall promedio | 0.24634647647219773|0.35713542142458576|0.35688271114936576|0.
 F1-score promedio | 0.24230364232042562|0.3554661615286645|0.2992047260360324|0.3274396517625613
 
 *Resultados de clasificadores con magnitud >= 5 y delta = 14*
+
 Classificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
 ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
 Precision promedio | 0.2563906674778534|0.3624337639804715|0.39474347014438027|0.3198595637440131
@@ -1092,99 +1098,21 @@ La imagen de abajo representa a un árbol de profundidad 1 utilizando el algorit
 
 
 
+# Conclusiones 
+Estudiar la relacion de sismos con otros eventos ayuda a la toma de decisiones que mitigan los efectos negativos. Gracias a la gran cantidad de informacion recolectada de sismos en los ultimos anios es posible su mejor estudio. Sin embargo es complicado analyzar su relacion con otros eventos por falta de informacion satelite publica. Dentro de este analisis estudio las posibles correlaciones entre sismos y eventos humanos, como Enfermedades de Transmision alimentaria (ETA) e Ingresos Hospitalarios (IH). Este estudio busca explotar estas correlaciones de estos para poder crear un predictor ayude a detectar incremento en ETA e IH. Llegamos a ver una leve correlacion entre estos datos, gastamos varios recursos de data-mining para explorar la data. Tuvimos mucho cuidado manipulando la data y no introducir un error en el analysis.
 
+Creamos un algorimo para asignar regiones dentro de Chile a los eventos sismicos, el cual no se encuentra publico en ninguna parte.  Aprovechamos la geografia chilena para generar delimitaciones que reflejen las delimitaciones geograficas de las regiones. Filtramos informacion que nos fue util para el analysis. Consecuentemente utilizamos el tiempo y region chilena para poder unir los datos satelite, ETA e IH. Donde utilizamos tecnicas de agregacion para poder medir y unir la informacion satellite a los sismos. Este estudio se enfoco al volumen de estos eventos, tomadolos como echos atomicos. Es decir, no se considera otra informacion que venia junto a estos eventos humanos, ETA e IH. El corto tiempo de esta informacion no permitio ser mas estricto en este aspecto, es de un trabajo futuro poder ser mas explicitos en esta informacion.
 
+Durante el analysis de correlacion utilizando _clustering_ y _correlacion lineal_ vimos cierta relacion entre la profundidad, magnitud y el incremento de ETA e IH, como tambien la region. Esto esta directamente relacionado al impacto de un sismo que usualmente se mide con la escala de Mercalli. Data que mida los sismos con la escala de Mercalli no pudo ser encontrada por ningun lado. Recordar que esta solo es encontrada cuando existen eventos que generen impacto negativo economico o humano, ademas de ser una escala subjetiva. La relacion de eventos humanos como ETA e IH son relacionados con el impacto de un sismo y este tambien depende a que tan bien la localidad del evento se encuentre preparado. Entonces la region donde ocurre un sismo tambien influye en los eventos humanos.
 
-
-
-
-
-
+Por ultimo creamos dos tareas de clasificacion, binaria y multi-clase. Los cuales buscan predecir incrementos de eventos humanos como ETA e IH. Los resultados en general no son buenos, comparados con un clasificador de juguete como DummyClassifier. Interesantemente encontramos una sorpresa en el clasificador binario, el clasificador Naive Bayes tuvo un buen score en _recall_ en promedio, llegando a tener un _recall_ de 0.96%. La medida de _recall_ es utilizada cuando se una tarea que incluye prediccion que es sensible. Es decir, que predice mas veces en predecir una falsa alarma. En este caso resulta ser considerado como positivo ya que ayuda a tener planes de contingencia ante un evento sismico. 
 
 
 # Anexo
 
-```{r agregarFechas}
-# Agregarle las fechas a las ETAs
-agregarFechasEtas <- function(dataframe) {
-  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
-  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
-                       Month=as.numeric(format(fechas, format="%m")),
-                       Day=as.numeric(format(fechas, format="%d")))
-  fecha_num <- data.frame(num_date=fechas$Year +
-                            (fechas$Month-1)/12 +
-                            (fechas$Day-1)/24/12)
-  fechas <- cbind(fechas, fecha_num)
-  cbind(dataframe, fechas)
-}
-```
+## Un simple analysis de sismos y precipitaciones
 
-
-```{python , eval=FALSE}
-#################################
-# Competencia de clasificadores #
-#################################
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, recall_score, precision_score
-
-
-def run_classifier(clf, X, y, num_tests=100):
-    metrics = {'f1-score': [], 'precision': [], 'recall': []}
-    
-    for _ in range(num_tests):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.30)
-        
-        clf.fit(X_train, y_train)
-        
-        predictions = clf.predict(X_test)
-        
-        metrics['y_pred'] = predictions
-        metrics['y_prob'] = clf.predict_proba(X_test)[:,1]
-        metrics['f1-score'].append(f1_score(y_test, predictions, average='weighted')) 
-        metrics['recall'].append(recall_score(y_test, predictions, average='weighted'))
-        metrics['precision'].append(precision_score(y_test, predictions, average='weighted'))
-    
-    return metrics
-
-import pandas as pd
-
-from sklearn.dummy import DummyClassifier
-from sklearn.svm import SVC  # support vector machine classifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB  # naive bayes
-from sklearn.neighbors import KNeighborsClassifier
-
-
-path_X = datos_dir + "X7_14d.csv"
-path_y = datos_dir + "y7_14d_cat.csv"
-
-print("Leyendo archivo " + path_X)
-X= pd.read_csv(path_X);
-print("Success")
-print("Leyendo archivo " + path_y)
-y= pd.read_csv(path_y);
-print("Success")
-
-c0 = ("Base Dummy", DummyClassifier(strategy='stratified'))
-c1 = ("Decision Tree", DecisionTreeClassifier())
-c2 = ("Gaussian Naive Bayes", GaussianNB())
-c3 = ("KNN", KNeighborsClassifier(n_neighbors=5))
-
-classifiers = [c0,c1, c2, c3]
-
-results = {}
-for name, clf in classifiers:
-    metrics = run_classifier(clf, X, y)   # hay que implementarla en el bloque anterior.
-    results[name] = metrics
-    print("----------------")
-    print("Resultados para clasificador: ",name) 
-    print("Precision promedio:",np.array(metrics['precision']).mean())
-    print("Recall promedio:",np.array(metrics['recall']).mean())
-    print("F1-score promedio:",np.array(metrics['f1-score']).mean())
-    print("----------------\n\n")
-```
-
+Se busca encontrar una relacion entre precipitaciones y sismos. En este analysis se toma encuenta los datos de temporadas de anio, son temporadas percivibles en las cuales podemos facilmente decernir si estos mantienen una relacion. Ademas buscamos relacion de sismos y los meses para tener un resultado mas cercano a fechas concretas.
 
 ### Sismos por estaciones del año 
 
@@ -1238,7 +1166,7 @@ ggarrange(bplot, dplot,
 ```
 ![Relacion lluvia y sismos](img/rain_sis.png)
 
-## Datos de precipitaciones fluviales
+### Relacion entre precipitaciones y sismos por mes.
 
 Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros. A continuacion se muestra las caracteristicas del dataset, y el tratamiento y limpieza de los datos.
 
@@ -1341,4 +1269,100 @@ de Arica y Parinacota respecto a cada mes\n") + # título
   xlab("Mes") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE)
 ```
 ![Precipitaciones en Arica y Parinacota](img/rain_local_ar_par.png)
+
+A continuacion una grafico de los sismos por mes vemos que estos no tiene ninguna relacion con el grafico de Promedio de precipitaciones por mes. Aunque el grafico es algo mas simple ese muestra no concordancia 
+```{r, message=FALSE, eval=FALSE}
+# load libraries
+library(tidyverse)
+library(lubridate)
+
+ggplot(season_data, mapping = aes(x=month)) +
+  geom_bar() + 
+  xlab("Mes") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE)
+
+```
+
+![Precipitaciones en Arica y Parinacota](img/sis_month.png)
+
+## Codigo Fuente
+```{r agregarFechas}
+# Agregarle las fechas a las ETAs
+agregarFechasEtas <- function(dataframe) {
+  fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
+  fechas <- data.frame(Year=as.numeric(format(fechas, format="%Y")),
+                       Month=as.numeric(format(fechas, format="%m")),
+                       Day=as.numeric(format(fechas, format="%d")))
+  fecha_num <- data.frame(num_date=fechas$Year +
+                            (fechas$Month-1)/12 +
+                            (fechas$Day-1)/24/12)
+  fechas <- cbind(fechas, fecha_num)
+  cbind(dataframe, fechas)
+}
+```
+
+
+```{python , eval=FALSE}
+#################################
+# Competencia de clasificadores #
+#################################
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score, recall_score, precision_score
+
+
+def run_classifier(clf, X, y, num_tests=100):
+    metrics = {'f1-score': [], 'precision': [], 'recall': []}
+    
+    for _ in range(num_tests):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.30)
+        
+        clf.fit(X_train, y_train)
+        
+        predictions = clf.predict(X_test)
+        
+        metrics['y_pred'] = predictions
+        metrics['y_prob'] = clf.predict_proba(X_test)[:,1]
+        metrics['f1-score'].append(f1_score(y_test, predictions, average='weighted')) 
+        metrics['recall'].append(recall_score(y_test, predictions, average='weighted'))
+        metrics['precision'].append(precision_score(y_test, predictions, average='weighted'))
+    
+    return metrics
+
+import pandas as pd
+
+from sklearn.dummy import DummyClassifier
+from sklearn.svm import SVC  # support vector machine classifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB  # naive bayes
+from sklearn.neighbors import KNeighborsClassifier
+
+
+path_X = datos_dir + "X7_14d.csv"
+path_y = datos_dir + "y7_14d_cat.csv"
+
+print("Leyendo archivo " + path_X)
+X= pd.read_csv(path_X);
+print("Success")
+print("Leyendo archivo " + path_y)
+y= pd.read_csv(path_y);
+print("Success")
+
+c0 = ("Base Dummy", DummyClassifier(strategy='stratified'))
+c1 = ("Decision Tree", DecisionTreeClassifier())
+c2 = ("Gaussian Naive Bayes", GaussianNB())
+c3 = ("KNN", KNeighborsClassifier(n_neighbors=5))
+
+classifiers = [c0,c1, c2, c3]
+
+results = {}
+for name, clf in classifiers:
+    metrics = run_classifier(clf, X, y)   # hay que implementarla en el bloque anterior.
+    results[name] = metrics
+    print("----------------")
+    print("Resultados para clasificador: ",name) 
+    print("Precision promedio:",np.array(metrics['precision']).mean())
+    print("Recall promedio:",np.array(metrics['recall']).mean())
+    print("F1-score promedio:",np.array(metrics['f1-score']).mean())
+    print("----------------\n\n")
+```
 
