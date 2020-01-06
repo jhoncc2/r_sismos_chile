@@ -82,6 +82,7 @@ Se busca juntar los datasets para buscar las correlaciones mencionadas en las hi
 La forma de juntarlos es mediante la posición de los eventos (latitud/longitud) o región, en caso que corresponda, y la fecha en que se produjeron.
 De esta manera se buscará la correlación entre los eventos planteados para confirmar o rechazar las hipótesis.
 
+Se procedió a continuar con lo realizado en el hito anterior, haciendo las proyecciones especificadas ahí y también nuevas ideas pensadas posteriormente.
 
 
 # Descripción de los datos
@@ -844,6 +845,9 @@ from IPython.display import Image
 from sklearn.tree import export_graphviz
 from sklearn import tree
 import pydotplus
+
+# Directorio donde están los datos para el clasificador
+datos_dir= "Diferencia ETAs por magnitud/"
 ```
 
 
@@ -900,12 +904,12 @@ def entrenarClasificador(prueba, path_X, path_y):
 def main():
 
     pruebas= ["5_7d", "6_7d", "7_7d", "5_14d", "5_7d_desh"]
-
+    
     for p in pruebas:
     
         clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
-                                                "X" + p + ".csv",
-                                                "y" + p + ".csv")
+                                                datos_dir + "X" + p + ".csv",
+                                                datos_dir + "y" + p + ".csv")
 
         # Exportar árbol
         #exportTreeImage(clf, X, y, p + "binario.png")
@@ -971,8 +975,8 @@ def main():
         print("##########################################")
         print("Clasificador con región")
         clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
-                                                "X" + p + ".csv",
-                                                "y" + p + "_cat.csv")
+                                                datos_dir + "X" + p + ".csv",
+                                                datos_dir + "y" + p + "_cat.csv")
 
         # Exportar árbol
         #exportTreeImage(clf, X, y, p + ".png")
@@ -980,8 +984,8 @@ def main():
         print("##########################################")
         print("Clasificador sin región")
         clf, X, y, X_train, y_train, X_test, y_test = entrenarClasificador(p,
-                                                "X" + p + "_sin_reg.csv",
-                                                "y" + p + "_cat.csv")
+                                                datos_dir + "X" + p + "_sin_reg.csv",
+                                                datos_dir + "y" + p + "_cat.csv")
         #exportTreeImage(clf, X, y, p + "sin_reg.png")
         
 main()
@@ -1221,9 +1225,9 @@ agregarFechasEtas <- function(dataframe) {
 
 
 ```{python}
-'''
-Competencia de clasificadores
-'''
+#################################
+# Competencia de clasificadores #
+#################################
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, recall_score, precision_score
@@ -1258,8 +1262,8 @@ from sklearn.naive_bayes import GaussianNB  # naive bayes
 from sklearn.neighbors import KNeighborsClassifier
 
 
-path_X = "X7_14d.csv"
-path_y = "y7_14d_cat.csv"
+path_X = datos_dir + "X7_14d.csv"
+path_y = datos_dir + "y7_14d_cat.csv"
 
 print("Leyendo archivo " + path_X)
 X= pd.read_csv(path_X);
