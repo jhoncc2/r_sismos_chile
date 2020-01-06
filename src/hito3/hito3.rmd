@@ -699,7 +699,7 @@ Luego se determinó el número para el umbral observando el comportamiento parec
 ```{r, eval=FALSE}
 quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
 ```
-
+![](img/eta_quantile.png)
 
 ### Evaluación de la influencia de la región o no
 
@@ -715,7 +715,6 @@ Para poder observar las decisiones que va considerando el árbol de decisión, s
 Se eligió un árbol de decisión, debido a que las hojas pueden estar en diferentes grupos, sin importar la cantidad que el grupo tenga.
 Así, podría adaptarse a los distintos sismos.
 
-
 #### Competencia de árboles de decisión
 
 Cómo los resultados variaban dependiendo la profundidad con la que se formaban los árboles, se decidió hacerlos competir variando los parámetros profundidad máxima y criterion.
@@ -726,16 +725,7 @@ Como el árbol no arrojó buenos resultados, como se muestra en la sección de r
 Algunos, podrían ser más parecidos a los que se apreció en los _clusters_, como el KNN.
 Sin embargo, se decidió que no se limitaría a investigar el comportamiento de ese solamente, por lo que también se optó por usar un clasificador bayesiano y uno «dummy» que sería bueno para comparar el correcto entrenamiento de los clasificadores.
 
-## Cambio en la forma de medir los ingresos hospitalarios
-
-### Experimentación con los clasificadores expuestos anteriormente
-
-### Ingresos hospitalarios
-
-
-# Resultados
-
-## Clasificador para enfermedades de transmisión alimentaria
+## Resultados Clasificador para enfermedades de transmisión alimentaria
 
 ### Resultados clasificador de árbol de decisión
 
@@ -1155,9 +1145,104 @@ Se observa que, en general, todos los clasificadores se asemejan al clasificador
 Se concluye, entonces que los clasificadores no fueron una buena herramienta, probablemente debido a la falta de datos (en general fueron pocos, por la falta de sismos fuertes) o a distintos comportamientos entre regiones.
 En este sentido, para el futuro podrían aislarse las regiones y probar por cada una de ellas, para que el clasificador se «adapte» a su región en particular.
 
-## Clasificador para ingresos hospitalarios
+## Clasificador para Ingresos Hospitalarios
+
+El desarrollo del experimento de clasificacion en IH se realizo de manera analoga a la de ETA. A continuacion mostraremos el desarrollo de este expermiento.
+
+## Distribucion de los incrementos/decrementos de Ingresos Hospitalarios
+
+La distribusion de diferencia entre incremento y decremento muestra una distribusion quasi-normal. Donde las colas se encuentran estiradas e inclinadas a los decrementos. Esta diferencia no es mas que una simple suma entre cambios del dia en el que se produjo un sismo _\(d - delta\) + \(d + delta\)_. Recordando siempre que se toman los sismos >= 5 y tomando como _delta = {3, 7, 14}_. Recuerde que cuando analisamos los sismos de >= 6 o >=7 son solo un sub-conjunto de este.
+```{r, eval=FALSE}
+d1 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d3.csv")
+d2 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d7.csv")
+d3 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d14.csv")
+
+par(mfrow=c(2,2))
+plot(density(d1$ING_DIFF),  main="Delta=3")
+rug(jitter(d1$ING_DIFF))
+
+plot(density(d2$ING_DIFF),  main="Delta=7")
+rug(jitter(d2$ING_DIFF))
+
+plot(density(d3$ING_DIFF),  main="Delta=14")
+rug(jitter(d3$ING_DIFF))
+
+boxplot(d1$ING_DIFF,d2$ING_DIFF,d3$ING_DIFF, names=c("3","7","14"))
+
+```
+![Densidad para sismos >= 5 y diferencia entre incremento y decremento con delta = {3,7,14}](img/ing_density.png)
 
 
+Hacemos el mismo analysis que 
+### Clasificador binario
+Clasificamos los datos binarios de los sismos, como _incremento_ o _decremento_. Utilizando el mismo analysis que en ETA. Obtenemos los datos utilizando un simple algoritmo utilizando la diferencia ya mencionada previamente.
+
+La distribusion mostrada anteriormente nos dice que los datos no se encuentran del todo balanceados. Por tanto haremos un balance de datos utilizando la estrategia _oversampling_ o _upsampling_, donde incrementamos el numero de la clase que se encuentran con menor tamanio.
+
+*Resultados de clasificadores con magnitud >= 5 y delta = 3*
+
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio |  0.4045992532391457 | 0.43423935482523673 | 0.4312893109382294 | 0.43763807844250396
+Recall promedio | 0.48902361685024626 | 0.38223832381772865 | 0.8143813666109686 | 0.5045940698252863
+F1-score promedio | 0.4421608273227311 | 0.4059665700288416 | 0.5600709255119732 | 0.4681348468758294
+
+
+*Resultados de clasificadores con magnitud >= 5 y delta = 7*
+
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio | 0.3872961393667831 | 0.4193564490530995 | 0.4110486648046686 | 0.41380027174033207
+Recall promedio | 0.4954397469934727 | 0.3648461502302095 | 0.9629178373452127 | 0.48359961538226237
+F1-score promedio | 0.43426467191138485 | 0.3894902181009887 | 0.5757260418739462 | 0.44538193028386097
+
+*Resultados de clasificadores con magnitud >= 5 y delta = 14*
+
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio | 0.4015495834059787| 0.42620754088348145| 0.41532882054787024| 0.43428140414898986
+Recall promedio | 0.5050258066525183 |0.3782505652987394 |0.949464422546 |0.48749837079762254 
+F1-score promedio | 0.44706266563950176|0.3998933267205183|0.5773383527694784|0.45843017970970346
+
+
+### Classificacion Multi-clase 
+El clasificador multi-clase fue configurado analogamente a el analysis de ETA. Primero calculamos los cuantiles de los datos que tenemos.
+```{r, eval=FALSE }
+quantile(d1$ING_DIFF, prob=seq(0, 1, length = 11))
+summary(d1$ING_DIFF)
+```
+![](img/uh_quantile_summ.png)
+La diferencia en ingresos se encuentra inclinada negativamente. En este caso la informacion mas sensible se encuentra en los incrementos, que es lo que desamos clasificar y predecir en un futuro. Entonces tomamos los el cuantil positivo (3rd cuantil) y utilizamos un umbral de valor == 75.
+
+En resumen, la clasificación queda como:
+  - Aumento < -75: disminución alta
+  - Aumento <= 0: disminución baja
+  - Aumento <= 75: aumento bajo
+  - Caso contrario: aumento alto
+
+
+*Resultados de clasificadores con magnitud >= 5 y delta = 3*
+Classificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio | 0.2507327576140339|0.3876901299003524|0.5058967666134677|0.3543702834338281
+Recall promedio | 0.25038281649044|0.39663779445334424|0.44343383481408|0.36345213837534623
+F1-score promedio | 0.2439288784869155|0.38944852613051834|0.3789695690938443|0.3546972245298021
+
+*Resultados de clasificadores con magnitud >= 5 y delta = 7*
+Classificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio | 0.24512935121337415|0.3583267783121016|0.4804950794067688|0.33050904858478936
+Recall promedio | 0.24634647647219773|0.35713542142458576|0.35688271114936576|0.32835525998190407
+F1-score promedio | 0.24230364232042562|0.3554661615286645|0.2992047260360324|0.3274396517625613
+
+*Resultados de clasificadores con magnitud >= 5 y delta = 14*
+Classificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio | 0.2563906674778534|0.3624337639804715|0.39474347014438027|0.3198595637440131
+Recall promedio | 0.25317694415974595|0.3686265697204939|0.39462598654478326|0.3293566817345862
+F1-score promedio | 0.24580116039825536|0.3629313448757567|0.3230796805553361|0.3167516076350386
+
+## Analysis de Clasificacion utilizando Decision-Tree
 
 
 
