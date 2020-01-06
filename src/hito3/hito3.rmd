@@ -228,18 +228,33 @@ ggarrange(a, b, c,
 
 # Diseño experimental
 
-## Limpieza de los datos
+Dentro del disenio experimental se inclino a realizar un analysis de clustering y clasificacion de sismos con respecto a eventos ETA y IH. Este necesito de un riguroso analysis de los datos para poder procesar y preparar la data. Dentro de los cambios mas fuertes fue el de la categorizacion de los datos sismos (datos geograficos) en regiones a Chile. Ademas del filtrado de los caracteristicas utiles para este analysis.
 
-Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos los informes de ETA e IH. Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw. Además, de la misma forma como se hizo en la Exploración de los datos, se clasificaron los sismos por Región de Chile. De esta manera, se construyó un dataset que tuviera todos los eventos sismológicos disponibles, clasificados por fecha. 
+Se plantea una clasificacion de sismos binaria y otra de cuatro dimensiones de incrementos en ETA y IH. En cuanto a los clusterings se muestra la correlacion los sismos tienen con los incrementos de ETA y IH, asi encontrar una segementacion que nos ayude la relacion de estos fenomenos.
+
+:TODO brief conclusion
+
+## Limpieza de los datos
 
 ### Datos sismológicos
 
-La limpieza de los datos sismológicos se realizó eliminando aquellas columnas que no representaban un verdadero aporte para los casos de estudio.
-Para ello, se seleccionaron los atributos de Magnitud, profundidad y región.
+Los datos sismicos son la principal fuente de informacion para los experimentos. Este requirio de los siguiente pasos.
 
-De esta forma, se eliminaron todos los otros atributos, dejando datasets más limpios y cómodos de trabajar, en especial para entrenar el clasificador.
+- Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos los informes de ETA e IH. Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw (magnitud en la escala de Ritchter). 
 
-La función que se utilizó para realizar esta parte, contó además con el retorno de un dataset que incluía años y meses para un trabajo futuro.
+- Se realizo la clasificacion regional de los datos filtrando sismos que pertenezcan a Chile, agregando una columna para agregar el nombre de la region correspondiente (el codigo se encuentra en anexos). 
+- Se agrego datos en representacion de las fechas para facilitar las consultas a la data. 
+- Por ultimo se filtro aquellas columnas que si representaban un verdadero aporte para los casos de estudio.
+
+_Nota_. Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificacion. Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada analysis.
+
+### Procesamiento de datos para clasificacion (agregacion)
+
+El experimento de clasificacion se realizo utilizando 
+La clasificacion se realizo utilizando un Δ,
+
+Mediante esta función, entonces, se logró almacenar un _dataset_ para sismos, indicando en la columna Aumento el Δ: la diferencia entre cuántas ETAs se registraron los _dias_ días posteriores al sismo y los _dias_ días anteriores al sismo.
+
 
 ```{r generarDatos, eval=FALSE}
 generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
@@ -287,22 +302,15 @@ generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
 }
 ```
 
-Mediante esta función, entonces, se logró almacenar un _dataset_ para sismos, indicando en la columna Aumento el Δ: la diferencia entre cuántas ETAs se registraron los _dias_ días posteriores al sismo y los _dias_ días anteriores al sismo.
-
-
-## Datos de enfermedades transmitidas por alimentos
 
 El preprocesamiento y limpieza de estos datos se pudo realizar en los hitos anteriores.
 En este hito se logró estudiar mucho mejor el comportamiento de los datos de aumento según los intervalos de tiempo, y la magnitud, profundidad y región de los eventos sismológicos dados.
-
 
 # Minería de datos
 
 Dada la estructura de los datos, se diseñaron clasificadores en la forma de árboles de decisión.
 Así, se podrían identificar los atributos que el clasificador pudiera considerar importantes para hacer la predicción.
 
-
-## Diseño experimental
 
 ### Enfermedades de transmisión alimentaria
 
