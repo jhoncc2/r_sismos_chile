@@ -86,7 +86,7 @@ De esta manera se buscará la correlación entre los eventos planteados para con
 
 # Descripción de los datos
 
-A continuación se mostrará la descripción de los datos a utilizar.
+A continuación se mostrará la descripción de los datos  utilizar.
 
 ## Datos sismológicos
 
@@ -988,6 +988,43 @@ main()
 ```
 
 
+Los resultados gráficos de los árboles presentados son los que se presentan a continuación.
+Se mostrarán solo algunos, pero los demás pueden verse en la carpeta «Diferencia ETAs por magnitud».
+
+Aquí se pueden observar los resultdos distintos de árboles que se obtuvieron para los 14 días, con magnitudes de sismo mayores o iguales a 5.
+Se tienen muestras con los datos sin considerar las regiones, considerándolas y con 4 y 2 clases.
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5 con dos clases](Diferencia ETAs por magnitud/5_14dbinario.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5 con 4 clases](Diferencia ETAs por magnitud/5_14d.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 5 con 4 clases y sin considerar las regiones](Diferencia ETAs por magnitud/5_14dsin_reg.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 6 con 4 clases](Diferencia ETAs por magnitud/6_14d.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 6 con 4 clases, sin considerar las regiones](Diferencia ETAs por magnitud/6_14dsin_reg.png)
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 7 con 4 clases. Nota: en este caso, se imprimen mal los nombres de las clases, pues no se presentan todas. Alta disminución corresponde a Bajo aumento. Baja disminución corresponde a Alto aumento.](Diferencia ETAs por magnitud/7_14d.png)
+
+
+![Árbol de decisión generado para sismos de magnitud mayor o igual a 7 con 4 clases. Nota: en este caso, se imprimen mal los nombres de las clases, pues no se presentan todas. Alta disminución corresponde a Bajo aumento. Baja disminución corresponde a Alto aumento.](Diferencia ETAs por magnitud/7_14dsin_reg.png)
+
+Como norma general, se puede apreciar que las regiones se presentan muy arriba en el árbol.
+Es decir, se llevan la mayor cantidad del peso de las decisiones que este toma.
+Esto puede deberse a que la mayor cantidad de sismos de los que se tiene registro pueden alterar los resultados.
+El caso extremo fue analizar los sismo de magnitud mayor o igual a 7, en los cuales la región fue el único parámetro utilizado para clasificar los sismos.
+Por esta razón, se decidió corroborar la información con los mismos datos, pero sin considerar las regiones.
+
+Sin las regiones, se obtuvieron árboles más pequeños en general, lo que habla también de una posible mejoría respecto a evitar sobreajustes.
+
+A pesar de esto, como muestran los resultados de arriba, el árbol es bastante malo para encontrar las clases, en todos los casos.
+El accuracy y el recall son muy bajos para ser considerado un clasificador efectivo.
+
+Se observa que la decisión de aumentar la cantidad de clases disminuyó el accuracy y el recall, por lo que no fue una medida efectiva.
+
+El mejor de todos fue el clasificador que usó los datos de magnitud 6 para 7 días binario, como en el hito anterior.
+
+
 ### Resultados de la competencia de clasificadores
 
 Se tomaron magnitudes distintas para evaluar los clasificadores: 5, 6, y 7, de 14 días todos, que fueron los que tuvieron mejor capacidad predictiva según los resultados anteriores.
@@ -1198,6 +1235,10 @@ F1-score promedio: 0.43833333333333324
 
 ----------------
 
+
+Se observa que, en general, todos los clasificadores se asemejan al clasificador Dummy en los resultados.
+Se concluye, entonces que los clasificadores no fueron una buena herramienta, probablemente debido a la falta de datos (en general fueron pocos, por la falta de sismos fuertes) o a distintos comportamientos entre regiones.
+En este sentido, para el futuro podrían aislarse las regiones y probar por cada una de ellas, para que el clasificador se «adapte» a su región en particular.
 
 ## Clasificador para ingresos hospitalarios
 

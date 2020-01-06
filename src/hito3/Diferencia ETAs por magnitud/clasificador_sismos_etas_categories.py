@@ -23,6 +23,7 @@ def exportTreeImage(dtree, X, y, path):
             feature_names=X.columns.tolist(),
             class_names=['Alta_Dism.', 'Baja_Dism.','Bajo_Aum.', 'Alto_Aum.'])
 
+    print(X.columns.tolist())
     # Draw graph
     graph = pydotplus.graph_from_dot_data(dot_data)
 
