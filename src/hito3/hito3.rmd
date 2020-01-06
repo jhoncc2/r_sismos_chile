@@ -938,207 +938,43 @@ Además, se realizó competencia para aquellos binarios (con dos clases) y los c
 El código se encuentra en los anexos.
 
 #### Binarios
-##### Magnitud 5, 14 días
-----------------
-
-Resultados para clasificador:  Base Dummy
-
-Precision promedio: 0.5057435931464518
-
-Recall promedio: 0.5035205992509363
-  
-F1-score promedio: 0.5032128058844465
-
-----------------
-
-----------------
-
-Resultados para clasificador:  Decision Tree
-
-Precision promedio: 0.5372547395781313
-
-Recall promedio: 0.5334831460674156
-
-F1-score promedio: 0.5334884367150398
-
-----------------
-
-----------------
-
-Resultados para clasificador:  Gaussian Naive Bayes
-
-Precision promedio: 0.5778510470900172
-
-Recall promedio: 0.5755430711610486
-
-F1-score promedio: 0.565797022911816
-
-----------------
-
-----------------
-
-Resultados para clasificador:  KNN
-
-Precision promedio: 0.5358593799236964
-
-Recall promedio: 0.5362921348314607
-
-F1-score promedio: 0.5345539655623789
-
-----------------
+**Magnitud 5, 14 días**
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio |  0.5057435931464518|0.5372547395781313|0.5778510470900172|0.5358593799236964
+Recall promedio | 0.5035205992509363|0.5334831460674156|0.5755430711610486|0.5362921348314607
+F1-score promedio | 0.5032128058844465|0.5334884367150398|0.565797022911816|0.5345539655623789
 
 #### Con 4 clases
 
-##### Magnitud 5, 14 días
+**Magnitud 5, 14 días**
 
----------------- 
-
-Resultados para clasificador:  Base Dummy 
-
-Precision promedio: 0.2543251271511943 
-
-Recall promedio: 0.25168539325842704 
-
-F1-score promedio: 0.2513672342633679 
-
----------------- 
- 
-----------------
-
-Resultados para clasificador:  Decision Tree 
-
-Precision promedio: 0.28198277519152576 
-
-Recall promedio: 0.2779026217228464 
-
-F1-score promedio: 0.277833332404425 
-
-----------------
-
-----------------
-
-Resultados para clasificador:  Gaussian Naive Bayes
-
-Precision promedio: 0.28500778188199705
-
-Recall promedio: 0.3156554307116105
-
-F1-score promedio: 0.2559771146372389
-
-----------------
-
-----------------
-
-Resultados para clasificador:  KNN
-
-Precision promedio: 0.29402535668893387
-
-Recall promedio: 0.2847191011235955
-
-F1-score promedio: 0.28464672910000527
-
-----------------
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio |  0.2543251271511943 |0.28198277519152576 |0.28500778188199705|0.29402535668893387
+Recall promedio | 0.25168539325842704 |0.2779026217228464 |0.3156554307116105|0.2847191011235955
+F1-score promedio | 0.2513672342633679 |0.277833332404425 |0.2559771146372389|0.28464672910000527
 
 
 
 ##### Magnitud 6, 14 días
-----------------
 
-Resultados para clasificador:  Base Dummy
 
-Precision promedio: 0.31734917970917964
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio |  0.31734917970917964|0.29914288933288935|0.2681247261059187|0.220177534337008
+Recall promedio | 0.2912|0.2716|0.28519999999999995|0.18959999999999996
+F1-score promedio | 0.28493039675184|0.26893306454700533|0.23373182632714543|0.1826686267078818
 
-Recall promedio: 0.2912
-
-F1-score promedio: 0.28493039675184
-
-----------------
-
-----------------
-
-Resultados para clasificador:  Decision Tree
-
-Precision promedio: 0.29914288933288935
-
-Recall promedio: 0.2716
-
-F1-score promedio: 0.26893306454700533
-
-----------------
-
----------------- 
-
-Resultados para clasificador:  Gaussian Naive Bayes 
-
-Precision promedio: 0.2681247261059187
-
-Recall promedio: 0.28519999999999995
-
-F1-score promedio: 0.23373182632714543
-
-----------------
-
-----------------
-
-Resultados para clasificador:  KNN
-
-Precision promedio: 0.220177534337008
-
-Recall promedio: 0.18959999999999996
-
-F1-score promedio: 0.1826686267078818
-
-----------------
 
 ##### Magnitud 7, 14 días
 
----------------- 
+Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
+---------------- | ---------------- | ---------------- | ---------------- | ---------------- | 
+Precision promedio |  0.5138888888888888|0.8622222222222221|0.6283333333333334|0.4461111111111111
+Recall promedio | 0.43000000000000005 |0.8433333333333333 |0.6366666666666667|0.5033333333333333
+F1-score promedio | 0.41966666666666663 | 0.8326666666666666 | 0.6016666666666667| 0.43833333333333324
 
-Resultados para clasificador:  Base Dummy 
-
-Precision promedio: 0.5138888888888888 
-
-Recall promedio: 0.43000000000000005 
-
-F1-score promedio: 0.41966666666666663 
-
----------------- 
- 
-----------------
-
-Resultados para clasificador:  Decision Tree 
-
-Precision promedio: 0.8622222222222221 
-
-Recall promedio: 0.8433333333333333 
-
-F1-score promedio: 0.8326666666666666 
-
-----------------
-
-----------------
-
-Resultados para clasificador:  Gaussian Naive Bayes
-
-Precision promedio: 0.6283333333333334
-
-Recall promedio: 0.6366666666666667
-
-F1-score promedio: 0.6016666666666667
-
-----------------
-
-----------------
-
-Resultados para clasificador:  KNN
-
-Precision promedio: 0.4461111111111111
-
-Recall promedio: 0.5033333333333333
-
-F1-score promedio: 0.43833333333333324
-
-----------------
 
 
 Se observa que, en general, todos los clasificadores se asemejan al clasificador Dummy en los resultados.
