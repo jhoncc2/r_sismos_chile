@@ -26,12 +26,13 @@ library("bookdown")
 
 # Introducción
 
-Los sismos en Chile son fenómenos muy recurrentes.
-Aun son impredecibles.
+Los sismos en Chile son fenómenos muy recurrentes. Aun son impredecibles.
 
-Los sismos puden tener consecuencias, por ello, es importante no solo intentar predecir su ocurrencia sino también evaluar el efecto que podrían provocar el sismo en otros ámbitos.
-Se decidió indagar si tienen relación con las enfermedades transmitidas por alimentos.
+Los sismos puden tener consecuencias de alto costo humano y economico, por ello es importante no solo intentar predecir su ocurrencia sino también evaluar el efecto que podrían provocar el sismo en otros ámbitos. 
+
 El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
+
+Se indaga si eventos sismicos tiene relación con las enfermedades con eventos transmitidas por alimentos (ETA) como tambien .
 
 Desde el Hito 2 se trabajan las hipótesis recién mencionadas, puesto que en el Hito 1 se barajó la posibilidad de basarse en 2 estudios principales mencionados posteriormente.
 Los análisis realizados finalmente indicaron que no habían tales relaciones o no eran claras para los sismos, por lo menos para Chile.
@@ -83,17 +84,14 @@ La forma de juntarlos es mediante la posición de los eventos (latitud/longitud)
 De esta manera se buscará la correlación entre los eventos planteados para confirmar o rechazar las hipótesis.
 
 
-
 # Descripción de los datos
-
-A continuación se mostrará la descripción de los datos ha utilizar.
 
 ## Datos sismológicos
 
 IRIS Incorporated Research Institutions for Seismology o por sus siglas en español, Instituciones incorporadas de investigación sismológica, provee equipamiento y acceso sísmico y otros datos alrededor del mundo, cortesía de una red sismógrafos de la comunidad científica internacional y de Estados Unidos.
 Siendo Chile uno de los paises con más frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación:
 
-```{r map, echo=FALSE, message=FALSE}
+```{r map, eval=FALSE, echo=FALSE, message=FALSE}
 # Carga de los datos e importacion de librerias
 library(ggplot2)
 library(dplyr)
@@ -120,6 +118,7 @@ ggmap(map) +
         col = Depth, size = Magnitude)) +
   scale_color_distiller(palette = "YlOrRd", direction = 1)
 ```
+![Ultimos 100 sismos en la zona al rededor de Chile](img/map.jpg)
 
 Dentro de los datos que se utilizaran para el análisis están: longitud, latitud, magnitud, profundidad, y tiempo.
 Longitud y latitud son parte del sistema de coordenadas geográficas es un sistema que referencia cualquier punto de la superficie terrestre y que utiliza para ello dos coordenadas angulares, latitud (norte o sur) y longitud (este u oeste).
@@ -127,18 +126,16 @@ Magnitud es una medida que tiene relación con la cantidad de energía liberada 
 Profundad define la distancia entre el epicentro de un terremoto con respecto al nivel del mar.
 Tiempo es el registro del evento.
 
+### Sismos por estaciones del año 
 
-### Sismos por estaciones del año
+La siguiente es una gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019. La grafica muestra que existe una aparente correlacion entre las temporadas del año y la cantidad de terremotos.
 
-Primero mostramos la gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019.
-
-```{r, message=FALSE, echo=FALSE}
+```{r, eval=FALSE, message=FALSE, echo=FALSE}
 # load libraries
 library(tidyverse)
 library(lubridate)
 
 # create new columns 
-
 dtime = as.Date(data$Time)
 season_data <-  mutate(data,
   year = year(dtime),
@@ -159,10 +156,10 @@ season_data <- mutate(season_data,
     )
 ) 
 
-
 # install if needed ggpubr
 #install.packages("ggpubr")
 library(ggpubr)
+par(mfrow=c(2,1))
 
 bplot <- season_data %>% 
   # filter(year > 2010) %>% 
@@ -179,13 +176,13 @@ ggarrange(bplot, dplot,
                     ncol = 2, nrow = 1)
 
 ```
-
+![Relacion lluvia y sismos](img/rain_sis.png)
 
 ### Cantidad de datos del dataset
 
 El gráfico de abajo muestra la cantidad de reportes recolectados por año, dentro de las inferencias, y consultas hechas los outliers que puedan ser registrados con equipos antiguos están exentos por ser mínima en su cantidad.
 
-```{r, message=FALSE}
+```{r, message=FALSE, eval=FALSE}
 # load libraries
 library(tidyverse)
 library(lubridate)
@@ -216,16 +213,17 @@ ggplot(season_data, mapping = aes(x=year)) +
   geom_bar()
 ```
 
+![Relacion lluvia y sismos](img/sis_hist.png)
 
 ## Datos de precipitaciones fluviales
 
-Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros.
+Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros. A continuacion se muestra las caracteristicas del dataset, y el tratamiento y limpieza de los datos.
 
 Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
 
 Este dataset se dejó de usar para el Hito 3, porque en las iteraciones anteriores no se encontraron correlaciones entre los sismos y las lluvias, por lo que no resultó relevante utilizar técnicas de minería de datos para revisar estos dataset.
 
-```{r}
+```{r, eval=FALSE}
 # Importar dataset de lluvias mensuales
 prAmon <- t(read.csv("https://anakena.dcc.uchile.cl/~cllull/IntroMineriaDatos/DataSets/cr2_prAmon_2018/cr2_prAmon_2018.txt"))
 
@@ -239,7 +237,7 @@ prAmon_na[prAmon == -9999] <- NA # Todas las celdas con -9999 a NA
 Se deben declarar como NA los datos con -9999 que representan datos faltantes, para que R los trabaje de buena manera.
 
 Luego se aplica el promedio de todos los años desde 1900 a 2018, evitando los NA.
-```{r}
+```{r, eval=FALSE}
 library(dplyr)
 data <- prAmon_na[, 15:1431]  # Los datos de lluvia, sin descripción
 data <- as.data.frame(data)  # De matrix a data.frame
@@ -252,14 +250,14 @@ prAmonMean$mean <- mean  # Pone el promedio en la tabla
 
 Se separaron los datos por región, debido a que Chile tiene muchos climas diferentes.
 
-```{r}
+```{r,eval=FALSE}
 prAmonMean$latitud <- as.numeric(as.character(prAmonMean$latitud)) # Se debe hacer numérico
 prAmonMean_arica <- filter(prAmonMean, latitud <= -17.46 & latitud >= -19.07)
 prAmonMean_magallanes <- filter(prAmonMean, latitud < -49.10 & latitud >= -56)
 ```
 
 Lo más ilustrativo que se puede obtener es determinar las precipitaciones en cada mes del año. De la siguiente forma se extraen las precipitaciones mensuales para la región de Arica:
-```{r, message=FALSE, echo=FALSE}
+```{r, message=FALSE, echo=FALSE, eval=FALSE}
 # Datos de arica:
 prAmon_na <- as.data.frame(prAmon_na)
 prAmon_na$latitud <- as.numeric(as.character(prAmon_na$latitud))
@@ -319,13 +317,11 @@ de Arica y Parinacota respecto a cada mes\n") + # título
   theme(axis.text.y = element_text(angle = 30, hjust = 1)) +
   xlab("Mes") + ylab("Promedio precipitaciones") + coord_flip(expand = TRUE)
 ```
-
-
-## Datos de temperaturas
+![Precipitaciones en Arica y Parinacota](img/rain_local_ar_par.png)
+## Datos de temperaturas (Borrar)
 
 Los datos de temperaturas máximas, mínimas y medias fueron extraídos de la página del CR2, al igual que los datos de precipitaciones.
 Por esto, tienen la misma clasificación que ellos.
-
 
 ## Datos de registros de ingresos hospitalarios
 
@@ -341,10 +337,9 @@ Para hacer una primera exploración de los resultados, se contó la cantidad de 
 Ahora, los sismos vienen con las columnas _Year_, _Month_ y _Day_, que fueron generados con una función similar a _agregarFechas_ que se encuentra en el anexo.
 También incluyen las regiones: estas fueron generadas mediante la función *cargar_sismos_por_region* que se encuentra en el anexo.
 
-
 ### Análisis hitos anteriores
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, eval=FALSE}
 # Agregarle las fechas a las ETAs
 agregarFechasEtas <- function(dataframe) {
   fechas <- as.Date(dataframe$Fecha.de.Ingestión, "%d-%m-%Y")
@@ -360,7 +355,7 @@ agregarFechasEtas <- function(dataframe) {
 ```
 
 Se cargan los sismos con:
-```{r cargarSismos}
+```{r cargarSismos, eval=FALSE}
 sismos <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
                      header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
 ```
@@ -368,7 +363,7 @@ sismos <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/sismos.csv",
 El código para las ETAs se simplificó mucho, logrando unir los 7 datasets de ETAs en 1.
 De esta manera, se cargan los datos de la forma:
 
-```{r cargarEtas}
+```{r cargarEtas, eval=FALSE}
 # Carga de las ETAs
 etas <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.csv",
                    header = TRUE, sep = ",", quote = "\"", dec = ".", fill = TRUE, comment.char = "#")
@@ -376,7 +371,6 @@ etas <- read.delim("http://anakena.dcc.uchile.cl/~rllull/CC5206/etas2011_2017.cs
 # Agregarle las fechas a las ETAs
 etas <- agregarFechasEtas(etas)
 ```
-
 
 Después, se guardan los datos en data frames *cant_etas* y *cant_etas_deshidratacion*, para obtener algunos gráficos:
 
@@ -388,27 +382,32 @@ cant_etas <- aggregate(Cantidad ~ Año + Región, cant_etas, function(a) {sum(a>
 
 library(ggplot2)  # cargamos la librería
 
-ggplot(cant_etas[cant_etas$Región == 4, ]) + # asociamos un data frame a ggplot
+par(mfrow=c(1, 3))
+a <- ggplot(cant_etas[cant_etas$Región == 4, ]) + # asociamos un data frame a ggplot
   geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
   #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
   ggtitle("Reportes de ETA anuales\npara la Región de Coquimbo") + # título
-  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+  xlab("Año") + ylab("Cantidad de ETA")  # etiquetas
 
-ggplot(cant_etas[cant_etas$Región == 1, ]) + # asociamos un data frame a ggplot
+b <- ggplot(cant_etas[cant_etas$Región == 1, ]) + # asociamos un data frame a ggplot
   geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
   #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
   ggtitle("Reportes de ETA anuales\npara la Región de Tarapacá") + # título
-  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+  xlab("Año") + ylab("Cantidad de ETA")  # etiquetas
 
-ggplot(cant_etas[cant_etas$Región == 2, ]) + # asociamos un data frame a ggplot
+c <- ggplot(cant_etas[cant_etas$Región == 2, ]) + # asociamos un data frame a ggplot
   geom_bar(aes(x = Año, y = Cantidad), stat="identity") +   # creamos un grafico de barras como una capa
   #coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
   ggtitle("Reportes de ETA anuales\npara la Región de Antofagasta") + # título
-  xlab("Año") + ylab("Cantidad de ETA reportadas ese año")  # etiquetas
+  xlab("Año") + ylab("Cantidad de ETA")  # etiquetas
+
+ggarrange(a, b, c,
+                    ncol = 2, nrow = 2)
+
 
 ```
 
-
+![Reporte de Region por anio](img/eta_rep_reg.png)
 
 # Pre-procesamiento y limpieza de los datos
 
@@ -428,7 +427,7 @@ De esta forma, se eliminaron todos los otros atributos, dejando datasets más li
 
 La función que se utilizó para realizar esta parte, contó además con el retorno de un dataset que incluía años y meses para un trabajo futuro.
 
-```{r generarDatos}
+```{r generarDatos, eval=FALSE}
 generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
   sismos_mag <- sismos[sismos$Magnitude >= magnitud_min
                        & sismos$Year >= 2011 & sismos$Year <= 2017, ]
@@ -483,7 +482,6 @@ El preprocesamiento y limpieza de estos datos se pudo realizar en los hitos ante
 En este hito se logró estudiar mucho mejor el comportamiento de los datos de aumento según los intervalos de tiempo, y la magnitud, profundidad y región de los eventos sismológicos dados.
 
 
-
 # Minería de datos
 
 Dada la estructura de los datos, se diseñaron clasificadores en la forma de árboles de decisión.
@@ -521,7 +519,7 @@ Se generaron archivos de texto que almacenaran los resultados para los distintos
 Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos (de 3, 7, 14 y 30 días).
 Se crea una función para trabajar los datos más fácil.
 
-```{r}
+```{r, eval=FALSE}
 generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
   sismos_mag <- sismos[sismos$Magnitude >= magnitud_min
                        & sismos$Year >= 2011 & sismos$Year <= 2017, ]
@@ -569,7 +567,7 @@ generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
 
 Para generar los datos, se procedió de la siguiente forma:
 
-```{r}
+```{r, eval=FALSE}
 # Sismos de magnitud mayor o igual a 5
 mag5_3d <- generar_datos(sismos, etas, 5, 3)
 mag5_7d <- generar_datos(sismos, etas, 5, 7)
@@ -594,7 +592,7 @@ mag7_30d <- generar_datos(sismos, etas, 7, 30)
 Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada magnitud y por cada región.
 Además, se puede extraer si se aprecia un aumento según cada magnitud y cada intervalo, obteniendo un resultado en cantidad de ETAs registradas posteriores o anteriores al sismo en promedio.
 
-```{r, message=FALSE}
+```{r, message=FALSE, eval=FALSE}
 mean <- function(a) {sum(a)/length(a)}
 
 # Magnitud 5 o más
@@ -616,7 +614,7 @@ En la parte de Minería de datos se estudia con mayor detalle este hallazgo.
 Se puede estudiar el balance de los datos por cada magnitud según la cantidad de días de intervalo tomados.
 Del resultado anterior se sugiere un aumento en la cantidad de ETAs registradas según la cantidad de días de intervalo considerados para los sismos.
 
-```{r}
+```{r, eval=FALSE}
 par(mfrow=c(1, 3))
 
 outl_mag5 <- boxplot(mag5_3d$Aumento, mag5_7d$Aumento, mag5_14d$Aumento, mag5_30d$Aumento, main="Aumento para magnitud >= 5\ny 3, 7, 14 y 30 días de intervalo")$out
@@ -628,11 +626,12 @@ lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 outl_mag7 <- boxplot(mag7_3d$Aumento, mag7_7d$Aumento, mag7_14d$Aumento, mag7_30d$Aumento, main="Aumento para magnitud >= 7\ny 3, 7, 14 y 30 días de intervalo")$out
 lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 ```
+![Cu](img/mag_incr.png)
 
 Se ve que los datos para 30 días tienen mucha dispersión, y aquellos para 3 días están muy centrados al 0.
 Se aprecia además que hay muchos outliers por lo que se remueven para realizar el _clustering_
 
-```{r}
+```{r, eval=FALSE}
 mag5_7d_sinout <- mag5_7d[-which(mag5_7d$Aumento %in% outl_mag5), ]
 mag5_14d_sinout <- mag5_14d[-which(mag5_14d$Aumento %in% outl_mag5), ]
 
@@ -641,7 +640,6 @@ mag6_14d_sinout <- mag6_14d[-which(mag6_14d$Aumento %in% outl_mag6), ]
 
 mag7_7d_sinout <- mag7_7d[-which(mag7_7d$Aumento %in% outl_mag7), ]
 mag7_14d_sinout <- mag7_14d[-which(mag7_14d$Aumento %in% outl_mag7), ]
-
 
 par(mfrow=c(1, 3))
 
@@ -654,7 +652,7 @@ lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 boxplot(mag7_7d_sinout$Aumento, mag7_14d_sinout$Aumento, main="Aumento para magnitud >= 7\ny 7 y 14 días sin outliers")
 lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 ```
-
+![Cu](img/mag_incr_noout.png)
 
 ### Generación de los clusters con K-Means
 
@@ -667,7 +665,7 @@ Se procede a trabajar para 7 y 14 días puesto que para estos valores se encontr
 
 Generación de los datos:
 
-```{r}
+```{r, eval=FALSE}
 generar_datos_cluster <- function(datos) {
   x <- data.frame(
     Magnitud = datos$Magnitud,
@@ -690,7 +688,7 @@ x6 <- generar_datos_cluster(mag7_14d)
 Vemos la cantidad de _clusters_ según el método del codo.
 Puesto que los datos de magnitud mayor o igual a 6 incluyen a los de 5, se procede con 5, a 7 días:
 
-```{r}
+```{r, eval=FALSE}
 elbow_fun <- function (data) {
   wss <- 0
   for (i in 1:clust){
@@ -707,6 +705,7 @@ wss1 <- elbow_fun(x1)
 
 plot(1:clust, wss1, type="b", main="Codo para mag. 5, 7d.", xlab="Nº de clusters", ylab="wss")
 ```
+![Cu](img/eta_sis_elbow.png)
 
 Se aprecia que el codo está en torno a los 5 clusters.
 
@@ -733,13 +732,11 @@ pairs(x5, col=km.out5$cluster, pch=8, main="Clustering para magnitud 7 y 7 días
 pairs(x6, col=km.out6$cluster, pch=8, main="Clustering para magnitud 7 y 14 días")
 ```
 
-
 Se observa que para la región, no se encuentran clusters claros.
 La suposición hecha en el hito anterior de no utilizar la región para clasificar parece haber sido acertada.
 Se observa que para magnitud y profundidad, para las magnitudes 5 y 6 e intervalo de 7 y 14 días, se forman algunos grupos en que los ETAs aumentan y otros en que disminuyen.
 
 Se podría decir que estos grupos sufren una especie de contrarrestación mutua, siendo el _cluster_ con aumentos más claros el de color rojo generado para la magnitud 6, a 7 días de intervalo en la columna de Profundidad, y el color negro en la columna de Magnitud.
-
 
 ## Clasificadores de enfermedades de transmisión alimentaria
 

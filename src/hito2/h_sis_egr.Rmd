@@ -1,0 +1,581 @@
+---
+title: "h_sis_egr"
+output: html_document
+---
+
+
+### import helping functions
+```{r setup, include=FALSE}
+# getwd() # get current dir
+
+source('./utils.R')
+
+# sism = cargar_sismos_con_region("/Users/jhonc/Downloads/all.csv")
+
+# head(sism)
+# sisms_all <- split_dates_in_columns(sism, 'Time')
+# write.csv(sisms_all, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/sismos_cleaned.csv")
+"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/sismos_cleaned.csv"
+```
+### Load data
+
+```{r}
+data <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/sismos_cleaned2.csv")
+
+### local
+egr_2008 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2008.csv", sep=",", header=TRUE)
+egr_2009 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2009.csv", sep=",", header=TRUE)
+egr_2010 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2010.csv", sep=",", header=TRUE)
+egr_2011 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2011.csv", sep=",", header=TRUE)
+egr_2012 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2012.csv", sep=",", header=TRUE)
+egr_2013 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2013.csv", sep=",", header=TRUE)
+egr_2014 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2014.csv", sep=",", header=TRUE)
+egr_2015 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2015.csv", sep=",", header=TRUE)
+egr_2016 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2016.csv", sep=",", header=TRUE)
+egr_2017 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2017.csv", sep=",", header=TRUE)
+egr_2018 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2018.csv", sep=",", header=TRUE)
+dlist <- list (egr_2008,egr_2009,egr_2010,egr_2011, egr_2012, egr_2013, egr_2014, egr_2015, egr_2016, egr_2017, egr_2018)
+
+
+summary(egr_2008)
+# egr_2008[egr_2008$year_ing == 1942,]
+summary(data[1])
+egr_2008
+
+with(egr_2008, egr_2008[REGION  == a[['Region_Number']], c('number_days')])
+```
+
+### Spliting
+```{r}
+get_dataset <- function (year) {
+  key <-toString(year)
+  switch(key, '2008' = egr_2008  , '2009' = egr_2009  , '2010' = egr_2010  , '2011' = egr_2011  , '2012' = egr_2012  , '2013' = egr_2013  , '2014' = egr_2014  , '2015' = egr_2015  , '2016' = egr_2016  , '2017' = egr_2017  , '2018' = egr_2018  )
+}
+
+
+# calculate classes
+calculate_class_binary <- function(reg, ing, k) {
+  min <- reg[['number_days']] - k
+  max <- reg[['number_days']] + k
+  
+  ing_data <-  with(ing, ing[REGION == reg[['Region_Number']], c('number_days', 'DIAG1', 'REGION','COMUNA')])
+  ings_bef <-  with(ing_data, ing_data[min <= number_days & number_days < reg[['number_days']], ]) 
+  ings_aft <-  with(ing_data, ing_data[reg[['number_days']] < number_days & number_days <= max, ]) 
+
+  if(nrow(ings_aft) > nrow(ings_bef)) {
+    response <- 1
+  } else if (nrow(ings_aft) <= nrow(ings_bef)) {
+    response <- 0
+  } else {
+    print (nrow(ings_bef))
+    print (nrow(ings_aft))
+    
+    # break
+  }
+  response
+}
+
+create_classification <- function(dataset, window) {
+  classes <- list()
+  for ( i in 1:nrow(dataset)) {
+    # print (i)
+    register <- dataset[i,]
+    ds <- get_dataset(register[['year']])
+    bool <- calculate_class_binary(register, ds, window)
+    classes[i] <- bool
+  }
+  # classes
+  classes_flattened <- unlist(classes, recursive = FALSE)
+  classes_flattened
+}
+
+# register <- data[2,]
+create_pred_data <- function(min_mag, window, data, file_path) {
+  sis_gt4 <- data[data$Magnitude >= min_mag & data$year >= 2008 & data$year <= 2018, ]
+  clss <- create_classification(sis_gt4, window)
+  sis_gt4$class <- clss
+  write.csv(sis_gt4, file = file_path)
+  sis_gt4
+}
+
+dd <- create_pred_data(7, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_int14.csv")
+
+
+```
+
+
+```{r}
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 5
+create_pred_data(5, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis5_inc3.csv")
+create_pred_data(5, 7, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis5_inc7.csv")
+create_pred_data(5, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis5_inc14.csv")
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 6
+create_pred_data(6, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis6_inc3.csv")
+create_pred_data(6, 7, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis6_inc7.csv")
+create_pred_data(6, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis6_inc14.csv")
+
+#Earthquake of time lapse 3, 7 and 14, magnitude >= 7
+create_pred_data(7, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_inc3.csv")
+create_pred_data(7, 7, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_int7.csv")
+create_pred_data(7, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_int14.csv")
+
+```
+
+```{r}
+# dataSismo <- read.csv("pred_sis4_inc2.csv", sep = ",", header = TRUE)
+#dataSismo$Time <- substr(dataSismo$Time, 0, 10)
+#dataSismo$Time <- as.Date(dataSismo$Time)
+# SismosDate <- data.frame(subset(dataSismo, select = c(EventID, Latitude, Longitude, Depth, MagType, Magnitude)), year = as.numeric(format(dataSismo$Time, format = "%Y")), month = as.numeric(format(dataSismo$Time, format = "%m")), day = as.numeric(format(dataSismo$Time, format = "%d")))
+#dataSismo <- dataSismo[dataSismo$Year == 2008, ]
+#dataSismo <- put_regions(dataSismo)
+#dataSismo <- dataSismo[c("EventID", "Latitude", "Longitude", "Depth", "Magnitude", "Year", "Month", "Day", "Region_Number")]
+# dataSismo <- dataSismo[c("Depth", "Magnitude", "Region_Number", "class")]
+separateRegions <- function(DataFrame){
+  DataFrame$Region_Arica_Parinacota <- 0
+  DataFrame$Region_Tarapaca <- 0
+  DataFrame$Region_Antofagasta <- 0
+  DataFrame$Region_Atacama <- 0
+  DataFrame$Region_Coquimbo <- 0
+  DataFrame$Region_Valparaiso <- 0
+  DataFrame$Region_Metropolitana_Santiago <- 0
+  DataFrame$Region_Libertador_General_OHiggins <- 0
+  DataFrame$Region_Maule <- 0
+  DataFrame$Region_Nuble <- 0
+  DataFrame$Region_Biobio <- 0
+  DataFrame$Region_Araucania <- 0
+  DataFrame$Region_Rios <- 0
+  DataFrame$Region_Lagos <- 0
+  DataFrame$Region_Aysen_General_Carlos_Ibanez <- 0
+  DataFrame$Region_Magallanes_Antartica <- 0
+  for (i in 1:nrow(DataFrame)) {
+    if (DataFrame[i, "Region_Number"] == 1) {
+      DataFrame[i, "Region_Tarapaca"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 2) {
+      DataFrame[i, "Region_Antofagasta"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 3) {
+      DataFrame[i, "Region_Atacama"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 4) {
+      DataFrame[i, "Region_Coquimbo"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 5) {
+      DataFrame[i, "Region_Valparaiso"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 6) {
+      DataFrame[i, "Region_Libertador_General_OHiggins"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 7) {
+      DataFrame[i, "Region_Maule"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 8) {
+      DataFrame[i, "Region_Biobio"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] ==9) {
+      DataFrame[i, "Region_Araucania"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 10) {
+      DataFrame[i, "Region_Lagos"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 11) {
+      DataFrame[i, "Region_Aysen_General_Carlos_Ibanez"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 12) {
+      DataFrame[i, "Region_Magallanes_Antartica"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 13) {
+      DataFrame[i, "Region_Metropolitana_Santiago"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 14) {
+      DataFrame[i, "Region_Rios"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 15) {
+      DataFrame[i, "Region_Arica_Parinacota"] <- 1
+    }
+    else {
+      DataFrame[i, "Region_Nuble"] <- 1
+    }
+  }
+  
+  return (data.frame(DataFrame))
+}
+# dataSismo <- separateRegions(dataSismo)
+# # quitando columna Region_number
+# dataSismo <- dataSismo[, -3]
+# write.csv(dataSismo, "SismosClasificador.csv")
+
+prepareForBinaryTraining <- function(d) {
+  d <- separateRegions(d)
+  # d <- scale(d$)
+}
+
+```
+
+prepare Train magnitude 5, inc 3, 7, 14
+```{r}
+d1 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis5_inc3.csv")
+d2 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis5_inc7.csv")
+d3 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis5_inc14.csv")
+d1 <- prepareForBinaryTraining (d1)
+d2 <- prepareForBinaryTraining (d2)
+d3 <- prepareForBinaryTraining (d3)
+
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis5_inc3.csv")
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis5_inc7.csv")
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis5_inc14.csv")
+```
+prepare Train magnitude 6, inc 3, 7, 14
+```{r}
+d1 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis6_inc3.csv")
+d2 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis6_inc7.csv")
+d3 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis6_inc14.csv")
+d1 <- prepareForBinaryTraining (d1)
+d2 <- prepareForBinaryTraining (d2)
+d3 <- prepareForBinaryTraining (d3)
+
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis6_inc3.csv")
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis6_inc7.csv")
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis6_inc14.csv")
+```
+Prepare Train magnitude 7, inc 3, 7, 14
+```{r}
+d1 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_inc3.csv")
+d2 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_inc7.csv")
+d3 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/pred_sis7_inc14.csv")
+d1 <- prepareForBinaryTraining (d1)
+d2 <- prepareForBinaryTraining (d2)
+d3 <- prepareForBinaryTraining (d3)
+
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis7_inc3.csv")
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis7_inc7.csv")
+write.csv(d1, file = "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/train_sis7_inc14.csv")
+```
+
+### Multiple clasification (4)
+
+```{r}
+
+# calculate classes
+calculate_prev_after <- function(reg, ing, k) {
+  min <- reg[['number_days']] - k
+  max <- reg[['number_days']] + k
+  
+  ing_data <-  with(ing, ing[REGION == reg[['Region_Number']], c('number_days', 'DIAG1', 'REGION','COMUNA')])
+  ings_bef <-  with(ing_data, ing_data[min <= number_days & number_days < reg[['number_days']], ]) 
+  ings_aft <-  with(ing_data, ing_data[reg[['number_days']] < number_days & number_days <= max, ]) 
+  
+  ings_bef <- nrow(ings_bef)
+  ings_aft <- nrow(ings_aft)
+
+  
+  return(data.frame(ING_BEFORE = ings_bef, ING_AFTER = ings_aft, ING_DIFF= (ings_aft - ings_bef)))
+}
+
+add_columns <- function(dataset, window) {
+  classes <- list()
+  first <- 1
+  for ( i in 1:nrow(dataset)) {
+    # print (i)
+    register <- dataset[i,]
+    ds <- get_dataset(register[['year']])
+    if (first == 1 ) {
+      ing_data <- calculate_prev_after(register, ds, window)
+      first <- 0
+    } else {
+      row <- calculate_prev_after(register, ds, window)
+      ing_data <- rbind(ing_data, row)
+    }
+    
+  }
+  # classes
+  ing_data
+}
+
+create_ing_data <- function(min_mag, window, data, file_path) {
+  sis_gt4 <- data[data$Magnitude >= min_mag & data$year >= 2008 & data$year <= 2018, ]
+  ing_data <- add_columns(sis_gt4, window)
+  
+  sis_gt4$ING_BEFORE <- ing_data$ING_BEFORE
+  sis_gt4$ING_AFTER <- ing_data$ING_AFTER
+  sis_gt4$ING_DIFF <- ing_data$ING_DIFF
+  write.csv(sis_gt4, file = file_path)
+  sis_gt4
+}
+
+
+
+# for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d14.csv",
+			 "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/test.csv")
+
+
+# create_ing_data(7, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/test.csv")
+```
+
+
+
+
+
+
+
+
+```{r}
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 5
+create_ing_data(5, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d3.csv")
+create_ing_data(5, 7, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d7.csv")
+create_ing_data(5, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d14.csv")
+
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 6
+create_ing_data(6, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d3.csv")
+create_ing_data(6, 7, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d7.csv")
+create_ing_data(6, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d14.csv")
+
+
+#Earthquake of time lapse 3, 7 and 14, magnitude >= 7
+create_ing_data(7, 3, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d3.csv")
+create_ing_data(7, 7, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d7.csv")
+create_ing_data(7, 14, data,"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d14.csv")
+
+```
+
+# Create files for binary classification
+```{r}
+
+for_binary_classification <- function (src_file, target_file) {
+  d <- read.csv(src_file)
+  d <- separateRegions(d)
+  d <- transform(d, class=ifelse(ING_DIFF > 0, 1, 0))
+  write.csv(d, file = target_file)
+  d
+}
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 5
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis5_d3.csv")
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d7.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis5_d7.csv")
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d14.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis5_d14.csv")
+
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 6
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis6_d3.csv")
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d7.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis6_d7.csv")
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d14.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis6_d14.csv")
+
+
+#Earthquake of time lapse 3, 7 and 14, magnitude >= 7
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis7_d3.csv")
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d7.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis7_d7.csv")
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d14.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/bin_sis7_d14.csv")
+
+# summary(d1$ING_DIFF)
+```
+
+# Create files for four class classification
+
+```{r}
+ 
+for_four_class_classification <- function (src_file, target_file) {
+  d <- read.csv(src_file)
+  d <- separateRegions(d)
+  d <- transform(d, class=ifelse(ING_DIFF > 0, ifelse(ING_DIFF>10, 3, 1), 0))
+  write.csv(d, file = target_file)
+  d
+}
+
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/test.csv")
+
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 5
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis5_d3.csv")
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d7.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis5_d7.csv")
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d14.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis5_d14.csv")
+
+
+# Earthquake of time lapse 3, 7 and 14, magnitude >= 6
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis6_d3.csv")
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d7.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis6_d7.csv")
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis6_d14.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis6_d14.csv")
+
+
+#Earthquake of time lapse 3, 7 and 14, magnitude >= 7
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d3.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis7_d3.csv")
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d7.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis7_d7.csv")
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d14.csv",
+			"/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/four_sis7_d14.csv")
+```
+
+```{r}
+df<-data.frame("hi","bye")
+names(df)<-c("hello","goodbye")
+df <- rbind(df, data.frame(hello="hola", goodbye="chao") )
+df$greet <- df$hello
+df
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Analizando datos egresados
+```{r}
+# myplots<-lapply(dlist,function(x)
+#   p<-ggplot(x,aes(x=REGION,y=DIAS_ESTAD,group=factor(FECHA_EGR),color=factor(FECHA_EGR))) + geom_line() + facet_wrap(~FECHA_EGR)
+# )
+# myplots
+# summary(egr_2018)
+
+scoped_data <- with(data,data[year>2000 & year<2020,])
+
+scoped_data <- with(data,data[year==2014,])
+ggplot(scoped_data, aes(Magnitude)) +
+  geom_bar(fill = "#0073C2FF") +
+  xlab("Magnitud") + ylab("Cantidad") +
+  ggtitle("Sismos 2014 - Region Metropolitana")
+  # theme_pubclean()
+
+ggplot(scoped_data, aes(Magnitude)) +
+  geom_col(fill = "#0073C2FF")  +
+  xlab("Magnitud") + ylab("Ingresos Hospitalarios") +
+  ggtitle("Sismos 2014 - Region Metropolitana")
+
+summary(data)
+```
+
+```{r}
+
+
+dlist <- list (egr_2010,egr_2011, egr_2012, egr_2013, egr_2014)
+q_egr <- egr_2011[egr_2011$REGION < 17,]
+
+ggplot(q_egr, aes(REGION)) +
+  geom_bar(fill = "#0073C2FF") 
+  # theme_pubclean()
+
+
+dclist <- list() 
+counter = 1
+for (da in dlist){
+  d <- da[da$REGION == 13,]
+  dclist[[counter]] <- d
+  counter = counter + 1
+}
+
+dclist[1]
+length(dclist)
+# dclist[1]
+
+
+pl <- Reduce(f = function(p, d) p + geom_bar(data=d, aes(COMUNA)), 
+             x = dclist, init = ggplot())
+
+gridExtra::grid.arrange(grobs = pl)
+
+summary(dclist[[1]])
+
+```
+
+
+```{r}
+length(dlist)
+binded <-  bind_dataframes(dlist)
+
+# joined <- data[data$Region_Number==13 & data$year < 2015 & data$year > 2008,]
+joined <- data[data$Magnitude > 5 & data$year > 2008,]
+for(d in dclist){
+  joined <- left_join(joined, d, by = c("mday" = "mday_ing", "month" = "month_ing", 
+                                        "year" = "year_ing", "Region_Number" = "REGION"))
+}
+
+summary(data)
+
+d1=joined%>%group_by(Depth,Region_Number,Latitude,Longitude,Magnitude,year,month,mday)%>%summarise(hos_in=n())
+summary(d1)
+
+d1$hos_in_cat <- cut(d1$hos_in, 
+                       breaks = c(0, 10, 30, Inf), 
+                       labels = c("regular", "frequent", "a lot"), 
+                       right = FALSE)
+
+
+
+ggplot(d1, aes(x= Magnitude, y=hos_in)) +
+  geom_col(fill = "#0073C2FF") +
+  xlab("Magnitud") + ylab("Ingresos Hospitalarios") +
+  ggtitle("Ingresos Hospitalarios desde 2008 al 2014 - Region Metropolitana") 
+
+```
+
+```{r}
+length(dlist)
+binded <-  bind_dataframes(dlist)
+
+joined <- data[data$Region_Number==13 & data$Magnitude > 5,]
+
+joined <- left_join(joined, egr_2014[da$REGION == 13,], by = c("mday" = "mday_ing", "month" = "month_ing", 
+                                        "year" = "year_ing", "Region_Number" = "REGION"))
+
+joined[colnames(data[1])]
+
+colnames(data)
+summary(data)
+
+library(dplyr)
+d1=joined%>%group_by(Depth,Region_Number,Latitude,Longitude,Magnitude,year,month,mday)%>%summarise(hos_in=n())
+summary(d1)
+
+d1$hos_in_cat <- cut(d1$hos_in, 
+                       breaks = c(0, 10, 30, Inf), 
+                       labels = c("regular", "frequent", "a lot"), 
+                       right = FALSE)
+
+
+
+ggplot(d1, aes(x= Magnitude, y=hos_in)) +
+  geom_col(fill = "#0073C2FF") +
+  xlab("Magnitud") + ylab("Ingresos Hospitalarios") +
+  ggtitle("Region Metropolitana") 
+
+
+```
+
+
