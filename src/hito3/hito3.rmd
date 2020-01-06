@@ -246,7 +246,7 @@ Los datos sismicos son la principal fuente de informacion para los experimentos.
 
 - Se agrego datos en representacion de las fechas para facilitar las consultas a la data. 
 
-- Por ultimo se filtro aquellas columnas que si representaban un verdadero aporte para los casos de estudio.
+- Por ultimo se filtro aquellas columnas que si representaban un verdadero aporte para los casos de estudio ('Latitude', 'Longitude', 'Depth', 'COMUNA').
 
 _Nota_. Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificacion. Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada analysis.
 
@@ -451,12 +451,9 @@ elbow_fun <- function (data) {
   wss
 }
 
-
 # Método del codo para 15 clusters, sobre el dataset para magnitud 6 y 7 días de intervalo
 clust <- 15
-
 wss1 <- elbow_fun(x1)
-
 plot(1:clust, wss1, type="b", main="Codo para mag. 5, 7d.", xlab="Nº de clusters", ylab="wss")
 ```
 ![Estrategia del codo para sismos y ETA](img/eta_sis_elbow.png)
@@ -492,6 +489,166 @@ Se observa que para magnitud y profundidad, para las magnitudes 5 y 6 e interval
 
 Se podría decir que estos grupos sufren una especie de contrarrestación mutua, siendo el _cluster_ con aumentos más claros el de color rojo generado para la magnitud 6, a 7 días de intervalo en la columna de Profundidad, y el color negro en la columna de Magnitud.
 
+## Clustering Ingresos Hospitalarions (IH)
+
+### Datos Sismológicos e Ingresos de pacientes a Hospitales 
+
+Los datos de IH son mucho mas numerosos que los de ETA por tanto veremos la posibilidad de analyzar solo los casos mas relevantes por Region. Bajo la asumpción de que los datos de ingresos de pacientes a centros hospitalarios incrementa cuando ocurren un evento sísmico, analizaremos las características principales de sismos con el numero de Ingresos a hospitales. El siguiente gráfico muestra la frecuencia de sismos en las regiones de Chile desde 2008 al 2018. Por legibilidad nos referiremos a ingresos de personas a centros hospitalarios como ICH desde ahora.
+
+Note que solo consideramos el numero de ICHs para definir el impacto de un sismo. Se omiten los demas datos que para este hito son considerados como relevantes. Corresponde a un trabajo futuro un analysis mas exhaustivo de estos datos y como afectan a la predicción.
+
+```{r, eval=FALSE}
+library(ggplot2)
+
+## load dataset of sismos
+data <- read.csv("/Users/jhonc/Workspace/data-mining/back_r_sismos_chile/Datasets sismológicos/sismos_cleaned2.csv")
+## query important sisms
+sis_gt4 <- data[data$Magnitude >= 5 & data$year >= 2008 & data$year <= 2018, ]
+
+ggplot(sis_gt4, aes(Magnitude)) + 
+  # geom_col(position="dodge", stat="identity") 
+  geom_bar() +
+  facet_grid(year ~ Region_Number)
+```
+![Matriz de histograma, Magnitud y Region](img/sis_matrix_reg.png)
+
+Vemos que los casos más notables de entre sismos y regiones se localizan entre las regiones 0 a 4, manteniéndose constante durante los años considerados. También podemos notar el caso especial de la región 13 el año 2010 y las regiones de 6 a la 9 también en el mismo año.
+
+Consideremos para este analysis 3 casos en regiones 7ma en 2010, 1ra en 2014 y 4ta en 2015.
+
+El siguiente codigo realiza un join de los datos, agregando la informacion de frequencia de IH en cada sismo. La agregacion se realiza aplicando la suma.
+```{r, eval=FALSE}
+library(dplyr)
+
+egr_2010 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2010.csv", sep=",", header=TRUE)
+egr_2014 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2014.csv", sep=",", header=TRUE)
+egr_2015 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets egresoHospitales/cleaned2/egr_2015.csv", sep=",", header=TRUE)
+
+ing_reg_10 <- egr_2010[egr_2010$REGION == 7,]
+ing_reg_14 <- egr_2014[egr_2014$REGION == 1,]
+ing_reg_15 <- egr_2015[egr_2015$REGION == 4,]
+
+sis_10 <- with(sis_gt4, sis_gt4[Region_Number == 7 & year == 2010,])
+sis_14 <- with(sis_gt4, sis_gt4[Region_Number == 1 & year == 2014,])
+sis_15 <- with(sis_gt4, sis_gt4[Region_Number == 4 & year == 2015,])
+
+## joined table
+j_10 <- left_join(sis_10, ing_reg_10, by = c("number_days"))
+j_14 <- left_join(sis_14, ing_reg_14, by = c("number_days"))
+j_15 <- left_join(sis_15, ing_reg_15, by = c("number_days"))
+
+col_list <- c('Depth', 'Magnitude', 'Latitude', 'Longitude', 'COMUNA','n')
+
+j_10 <- j_10 %>%
+  group_by(.dots=c("Latitude","Magnitude","COMUNA")) %>%
+  add_tally()
+
+j_14 <- j_14 %>%
+  group_by(.dots=c("Latitude","Magnitude","COMUNA")) %>%
+  add_tally()
+
+j_15 <- j_15 %>%
+  group_by(.dots=c("Latitude","Magnitude","COMUNA")) %>%
+  add_tally()
+# 
+```
+
+### Numero de cluster optimos 
+En el siguiente gráfico mostramos los distintos valores del hiper-parámetro k en clustering para el grupo de datos seleccionados previamente. Note que para las regiones 7ma y 4ta estas tienen un descenso continuo, mientra que para 1ra region existe un salto en k=5. Sin embargo todos presentan mejora con el valor k=4, entonces definimos que k=4 es el número óptimo de clusters para todos los casos.
+
+```{r, eval=FALSE}
+library(ggplot2, gridExtra)
+library(cluster)
+require(gridExtra)
+library(cowplot)
+################ kmeans 
+set.seed(2)
+clust = 15 # graficaremos hasta 15 clusters
+elbow_fun <- function (data) {
+  wss <- 0
+  for (i in 1:clust){
+    wss[i] <-
+      sum(kmeans(data, centers=i)$withinss)
+  }
+  wss
+}
+
+col_list <- c('Latitude', 'Longitude', 'Depth', 'COMUNA', 'n')
+# escalamos los datos, evitamos problemas a la hora de calcular el cluster
+red_10 <- scale(j_10[col_list])
+red_14 <- scale(j_14[!is.na(j_14$COMUNA),col_list])
+red_15 <- scale(j_15[col_list])
+
+wss1 <- elbow_fun(red_10)
+wss2 <- elbow_fun(red_14)
+wss3 <- elbow_fun(red_15)
+
+par(mfrow=c(2,2))
+p1 <- plot(1:clust, wss1, type="b", xlab="Numero de clusters (7ma Region) ", ylab="wss")
+p2 <- plot(1:clust, wss2, type="b", xlab="Numero de clusters (1ra Region)", ylab="wss")
+p3 <- plot(1:clust, wss3, type="b", xlab="Numero de clusters (4ta Region)", ylab="wss")
+```
+![Tecnica del codo para datos sismos e IH](img/cluster_elbow_ih.png)
+
+```{r eval=FALSE}
+library(cluster)
+# col_list <- c('Depth', 'Magnitude', 'Latitude', 'Longitude', 'COMUNA','n')
+col_list <- c('Latitude', 'Longitude', 'Depth', 'Magnitude', 'n')
+
+red_10 <- scale(j_10[col_list])
+red_14 <- scale(j_14[!is.na(j_14$COMUNA),col_list])
+red_15 <- scale(j_15[col_list])
+
+cluster_10 <- kmeans(red_10, 4)
+cluster_14 <- kmeans(red_14, 4)
+cluster_15 <- kmeans(red_15, 4)
+
+# library("ggplot2")
+# library("GGally") 
+# w <- as.data.frame(km.out1)
+# w$cluster <- factor(km.out1$cluster)
+# ggpairs(w)
+
+par(mfrow=c(2,2))
+clusplot(red_10, cluster_10$cluster, color=TRUE, shade=FALSE, lines=1)
+clusplot(red_14, cluster_14$cluster, color=TRUE, shade=FALSE, lines=1)
+clusplot(red_15, cluster_15$cluster, color=TRUE, shade=FALSE, lines=1)
+# plot_grid(p1, p2, p3)
+```
+![Cluster de sismos e IH](img/cluster_ih.png)
+
+### Graficos de Correlacion y clustering
+El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 3. Note que para todos los casos, 'n' representa el numero de ICH de un sismo en una fecha determinada.
+
+### Graficos de Correlacion de atributos en clustering
+El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 3. Note que para todos los casos, 'n' representa el numero de ICH de un sismo en una fecha determinada.
+```{r, eval=FALSE}
+d_10 <- j_10[col_list]
+d_14 <- j_14[!is.na(j_14$COMUNA), col_list]
+d_15 <- j_15[col_list]
+
+fit <- kmeans(d_10, 8)
+fit <- kmeans(d_14, 8)
+fit <- kmeans(d_15, 8)
+
+par(mfrow=c(3, 1))
+pairs(d_10, col=fit$cluster)
+pairs(d_14, col=fit$cluster)
+pairs(d_15, col=fit$cluster)
+
+# plot(fit[], main="Resultados usando k = 2", xlab="", ylab="")
+
+# clusplot(j_10, fit$cluster, color=TRUE, shade=TRUE,
+   # labels=2, lines=0)
+
+```
+![Scatterplot de relaciones lineales y clustering en la region 7ma en 2010 ](img/corr_clust_10_7.png)
+![Scatterplot de relaciones lineales y clustering en la region 1ra en 2014 ](img/corr_clust_14_1.png)
+![Scatterplot de relaciones lineales y clustering en la region 4ta en 2015 ](img/corr_clust_15_4.png)
+
+Note que las correlaciones no son claras, la forma de los datos es densa. Sin embargo se pueden encontrar ciertas relaciones en la profundidad (Depth y la Longitud), un breve analysis muestra que esto es debido a la cercania de los sismos a las costas o dicho de una mejor manera al cinturon de fuego. El cinturon de fuego lleva como una capa superior a los continenetes que lo componen, entonces es mejor decir que a menor longitud mas profundiad por la forma de las capas de la tierra en esta zona del planeta. Esta relaciones es mejor representada en la region primera (Tarapaca) de Chile. No es el proposito de este estudio realizar mas conclusiones a estas relaciones de profundidad de un sismo.
+
+Por otra parte, los grupos encontrados con respecto a la cantidad de IH forman grupos muy interesantes en la region cuarta. Los grupos se encuentran bien definidos en relacion a la profundidad. Existe una gran cantidad ingresos hospitalarios a baja profundidad. Se puede concluir entonces que la prediccion de incremento de incremento de IH con respecto a eventos sismicos no es trivial.
 
 # Clasificacion
 <!-- ### Arboles de Decision ETA -->
