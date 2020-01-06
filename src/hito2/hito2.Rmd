@@ -451,7 +451,7 @@ library(ggplot2)
 #### end code to use python ####
 
 ## load dataset of sismos
-data <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/sismos_cleaned2.csv")
+# data <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/sismos_cleaned2.csv")
 ## query important sisms
 sis_gt4 <- data[data$Magnitude >= 4 & data$year >= 2008 & data$year <= 2018, ]
 

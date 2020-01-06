@@ -43,6 +43,7 @@ summary(data[1])
 egr_2008
 
 with(egr_2008, egr_2008[REGION  == a[['Region_Number']], c('number_days')])
+
 ```
 
 ### Spliting
@@ -207,8 +208,8 @@ separateRegions <- function(DataFrame){
 # dataSismo <- dataSismo[, -3]
 # write.csv(dataSismo, "SismosClasificador.csv")
 
-prepareForBinaryTraining <- function(d) {
-  d <- separateRegions(d)
+prepareForBinaryTraining <- function(data) {
+  data <- separateRegions(d)
   # d <- scale(d$)
 }
 
@@ -307,7 +308,7 @@ create_ing_data <- function(min_mag, window, data, file_path) {
 
 
 
-# for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d14.csv",
+for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d14.csv",
 			 "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/binary/test.csv")
 
 
@@ -429,7 +430,6 @@ rug(jitter(dd$Magnitude))
 
 ```{r}
 quantile(d1$ING_DIFF, prob=seq(0, 1, length = 11))
-da <- d[d$ING_DIFF > 50,]
 
 ```
 

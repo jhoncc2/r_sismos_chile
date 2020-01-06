@@ -28,11 +28,11 @@ library("bookdown")
 
 Los sismos en Chile son fenómenos muy recurrentes e impredecibles. El cinturon de fuego del pacifico hace que paises que contiene tengan gran frequencia de sismos. A diferencia de decadas anteriores el numero de sismos detectados incremento significativamente gracias a nuevas estaciones sismico-detectoras instaladas en Chile. 
 
-Los sismos puden tener consecuencias de alto costo humano y economico, por ello es importante no solo intentar predecir su ocurrencia sino también estudiar el efecto que podrían provocar el sismo en otros ámbitos. Es decir el impacto que tiene en otras areas. En este informe nos centraremos en los recursos humanos, por el accesso a estos datos que permite el Departamento de Estadisticas e Informacion de Salud (DEIS) en Chile. 
+Los sismos puden tener consecuencias de alto costo humano y economico, por ello es importante no solo intentar predecir su ocurrencia sino también estudiar el efecto que podrían provocar el sismo en otros ámbitos. Es decir el impacto que tiene en otras areas. En este informe nos centraremos en los recursos humanos, por el accesso a estos datos que permite el Departamento de Estadisticas e Información de Salud (DEIS) en Chile. 
 
 Se investiga si eventos sismicos tiene relación con las Enfermedades Transmitidas por Alimentos (ETA) como tambien impacto al incremento de Ingresos a Hospitales (IH). El  poder determinar si existe una relación entre estos eventos podría ayudar a desplegar infraestructura y recursos humanos después de un desastre, además de ayudar en la generación de políticas públicas que ayuden a mitigar los efectos secundarios.
 
-Nota. Desde el Hito 2 se trabajan las hipótesis recién mencionadas, puesto que en el Hito 1 se barajó la posibilidad de basarse en el estudio de la relacion entre eventos fluviales y los sismos. Este informe incluye este analisis con fines informativos. Los análisis finalmente indicaron que las relaciones no son claras para los sismos, por lo menos para Chile.
+Nota. Desde el Hito 2 se trabajan las hipótesis recién mencionadas, puesto que en el Hito 1 se barajó la posibilidad de basarse en el estudio de la relación entre eventos fluviales y los sismos. Este informe incluye este análisis con fines informativos. Los análisis finalmente indicaron que las relaciones no son claras para los sismos, por lo menos para Chile.
 
 ## Hipótesis
 
@@ -88,7 +88,7 @@ IRIS Incorporated Research Institutions for Seismology o por sus siglas en espa�
 Siendo Chile uno de los paises con más frecuencia de sismos en el mundo, IRIS clasifica los sismos dentro de un cuadro limitado por coordenadas definidas por el mismo instituto (máxima latitud=-15.400, mínima latitud=-57.000, máxima longitud=-63.800, mínima lon=-83.100). Como se muestra en el gráfico a continuación:
 
 ```{r map, eval=FALSE, echo=FALSE, message=FALSE}
-# Carga de los datos e importacion de librerias
+# Carga de los datos e importación de librerias
 library(ggplot2)
 library(dplyr)
 library(tidyverse)
@@ -133,7 +133,7 @@ ggplot(season_data, mapping = aes(x=year)) +
   geom_bar()
 ```
 
-![Cantidad de sismos por anio](img/sis_hist.png)
+![Cantidad de sismos por año](img/sis_hist.png)
 
 <!-- ## Datos de temperaturas (Borrar) -->
 
@@ -141,7 +141,52 @@ ggplot(season_data, mapping = aes(x=year)) +
 <!-- Por esto, tienen la misma clasificación que ellos. -->
 
 ## Datos de registros de ingresos hospitalarios
+Los datos de Ingresos Hospitalarios (IH) son bastos, la collección que se pudo recabar data de los años 2018 a 2019. Primero vemos la cantidad de elementos por año es basta y varia, como se ver el grafico de abajo. No encontramos ninguna justificación por la que esto ocurre en la pagina del DEIS.
 
+```{r, eval=FALSE}
+f <- data.frame(year= c(2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018),
+data=c(nrow(egr_2008), nrow(egr_2009), nrow(egr_2010), nrow(egr_2011), nrow(egr_2012), nrow(egr_2013), nrow(egr_2014), nrow(egr_2015), nrow(egr_2016), nrow(egr_2017), nrow(egr_2018)))
+plot(f, type="l")
+```
+![](img/ing_size.png)
+
+
+
+Esta información cuenta con varios campos, dentro de los mas interesantes son los mensionados a continuacion: COMUNA, FECHA_EGR, DIAS_ESTAD, REGION, y DIAG1. Pronto vemos que el numero de diagnosticos unicos son miles por lo tanto no sirven de ayuda para filtrar estos datos.
+
+```{r, echo=FALSE, eval=FALSE}
+sum(lengths(unique(egr_2008$DIAG1)))
+```
+![](img/ing_number_diag.png)
+Dentro de este análisis buscamos encontrar los ingresos hospitalarios. Sin embargo estos los datos originales no muestran este datos, sin embargo podemos genrar una nueva columna de _fecha de ingreso_ utilizando la formula _FECHA_EGR - DIAS_ESTAD_. Un problema encontrado para generar esta nueva columna fue que los formatos de las fechas puede variar de acuerdo el año que se encuentre. El siguiente codigo muestra el algoritmo que se utilizo para este proceso.
+
+```{r, eval= FALSE}
+ddd <- data.frame(a=c(1,2,3))
+ddd <-mutate(ddd, b= a + 1)
+
+a <- c(1,2,3) + c(1,2,3)
+data <- egr_2018
+
+formats <- c("%d-%m-%Y","%d-%m-%Y","%d-%m-%Y","%d-%m-%Y",
+            "%Y-%m-%d","%Y-%m-%d","%Y-%m-%d","%Y-%m-%d","%Y-%m-%d","%Y-%m-%d","%Y-%m-%d")
+
+dclist <- list()
+counter = 1
+for (data in dlist) {
+  
+  lastDate <-  as.Date("1900-01-01")
+  dtime <- as.Date(data[['FECHA_EGR']], formats[counter])
+  dtime <-  dtime - data[['DIAS_ESTAD']]
+  season_data <- mutate(data,
+    year_ing = year(dtime),
+    month_ing = month(dtime),
+    mday_ing = mday(dtime),
+    number_days = as.numeric(dtime - lastDate)
+  )
+  dclist[[counter]] <- season_data
+  counter = counter + 1
+}
+```
 
 
 ## Datos de enfermedades transmitidas por alimentos
@@ -224,13 +269,13 @@ ggarrange(a, b, c,
 
 ```
 
-![Reporte de Region por anio](img/eta_rep_reg.png)
+![Reporte de Region por año](img/eta_rep_reg.png)
 
 # Diseño experimental
 
-Dentro del disenio experimental se inclino a realizar un analysis de clustering y clasificacion de sismos con respecto a eventos ETA y IH. Este necesito de un riguroso analysis de los datos para poder procesar y preparar la data. Dentro de los cambios mas fuertes fue el de la categorizacion de los datos sismos (datos geograficos) en regiones a Chile. Ademas del filtrado de los caracteristicas utiles para este analysis.
+Dentro del disenio experimental se inclino a realizar un análisis de clustering y clasificación de sismos con respecto a eventos ETA y IH. Este necesito de un riguroso análisis de los datos para poder procesar y preparar la data. Dentro de los cambios mas fuertes fue el de la categorización de los datos sismos (datos geograficos) en regiones a Chile. Ademas del filtrado de los caracteristicas utiles para este análisis.
 
-Se plantea una clasificacion de sismos binaria y otra de cuatro dimensiones de incrementos en ETA y IH. En cuanto a los clusterings se muestra la correlacion los sismos tienen con los incrementos de ETA y IH, asi encontrar una segementacion que nos ayude la relacion de estos fenomenos.
+Se plantea una clasificación de sismos binaria y otra de cuatro dimensiones de incrementos en ETA y IH. En cuanto a los clusterings se muestra la correlación los sismos tienen con los incrementos de ETA y IH, asi encontrar una segementación que nos ayude la relación de estos fenomenos.
 
 :TODO brief conclusion
 
@@ -238,17 +283,17 @@ Se plantea una clasificacion de sismos binaria y otra de cuatro dimensiones de i
 
 ### Datos sismológicos
 
-Los datos sismicos son la principal fuente de informacion para los experimentos. Este requirio de los siguiente pasos.
+Los datos sismicos son la principal fuente de información para los experimentos. Este requirio de los siguiente pasos.
 
 - Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos los informes de ETA e IH. Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw (magnitud en la escala de Ritchter). 
 
-- Se realizo la clasificacion regional de los datos filtrando sismos que pertenezcan a Chile, agregando una columna para agregar el nombre de la region correspondiente (el codigo se encuentra en anexos). 
+- Se realizo la clasificación regional de los datos filtrando sismos que pertenezcan a Chile, agregando una columna para agregar el nombre de la region correspondiente (el codigo se encuentra en anexos). 
 
-- Se agrego datos en representacion de las fechas para facilitar las consultas a la data. 
+- Se agrego datos en representación de las fechas para facilitar las consultas a la data. 
 
 - Por ultimo se filtro aquellas columnas que si representaban un verdadero aporte para los casos de estudio ('Latitude', 'Longitude', 'Depth', 'COMUNA').
 
-_Nota_. Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificacion. Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada analysis.
+_Nota_. Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificación . Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada análisis.
 
 ### Aumento registrado según la región
 
@@ -273,7 +318,7 @@ Se aprecia que en general en promedio se registran aumentos en los reportes de E
 En la parte de Minería de datos se estudia con mayor detalle este hallazgo.
 
 
-### Procesamiento de datos para clasificacion (agregacion)
+### Procesamiento de datos para clasificación (agregacion)
 Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
 Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
 Además, se debió agregar la dimensión de temporalidad, necesaria para apreciar los datos.
@@ -501,7 +546,7 @@ Se podría decir que estos grupos sufren una especie de contrarrestación mutua,
 
 Los datos de IH son mucho mas numerosos que los de ETA por tanto veremos la posibilidad de analyzar solo los casos mas relevantes por Region. Bajo la asumpción de que los datos de ingresos de pacientes a centros hospitalarios incrementa cuando ocurren un evento sísmico, analizaremos las características principales de sismos con el numero de Ingresos a hospitales. El siguiente gráfico muestra la frecuencia de sismos en las regiones de Chile desde 2008 al 2018. 
 
-Note que solo consideramos el numero de IHs para definir el impacto de un sismo. Se omiten los demas datos que para este hito son considerados como relevantes. Corresponde a un trabajo futuro un analysis mas exhaustivo de estos datos y como afectan a la predicción.
+Note que solo consideramos el numero de IHs para definir el impacto de un sismo. Se omiten los demas datos que para este hito son considerados como relevantes. Corresponde a un trabajo futuro un análisis mas exhaustivo de estos datos y como afectan a la predicción.
 
 ```{r, eval=FALSE}
 library(ggplot2)
@@ -520,9 +565,9 @@ ggplot(sis_gt4, aes(Magnitude)) +
 
 Vemos que los casos más notables de entre sismos y regiones se localizan entre las regiones 0 a 4, manteniéndose constante durante los años considerados. También podemos notar el caso especial de la región 13 el año 2010 y las regiones de 6 a la 9 también en el mismo año.
 
-Consideremos para este analysis 3 casos en regiones 7ma en 2010, 1ra en 2014 y 4ta en 2015.
+Consideremos para este análisis 3 casos en regiones 7ma en 2010, 1ra en 2014 y 4ta en 2015.
 
-El siguiente codigo realiza un join de los datos, agregando la informacion de frequencia de IH en cada sismo. La agregacion se realiza aplicando la suma.
+El siguiente codigo realiza un join de los datos, agregando la información de frequencia de IH en cada sismo. La agregación se realiza aplicando la suma.
 ```{r, eval=FALSE}
 library(dplyr)
 
@@ -617,11 +662,11 @@ clusplot(red_15, cluster_15$cluster, color=TRUE, shade=FALSE, lines=1)
 ```
 ![Cluster de sismos e IH](img/cluster_ih.png)
 
-### Graficos de Correlacion y clustering
-El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 4. Note que para todos los casos, 'n' representa el numero de IH de un sismo en una fecha determinada.
+### Graficos de Correlación y clustering
+El siguiente grafico muestra la matriz de cluster y correlación de la 7ma region en el año 2010, con k = 4. Note que para todos los casos, 'n' representa el numero de IH de un sismo en una fecha determinada.
 
-### Graficos de Correlacion de atributos en clustering
-El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 4. Note que para todos los casos, 'n' representa el numero de IH de un sismo en una fecha determinada.
+### Graficos de Correlación de atributos en clustering
+El siguiente grafico muestra la matriz de cluster y correlación de la 7ma region en el año 2010, con k = 4. Note que para todos los casos, 'n' representa el numero de IH de un sismo en una fecha determinada.
 ```{r, eval=FALSE}
 d_10 <- j_10[col_list]
 d_14 <- j_14[!is.na(j_14$COMUNA), col_list]
@@ -640,9 +685,9 @@ pairs(d_15, col=fit$cluster)
 ![Scatterplot de relaciones lineales y clustering en la region 1ra en 2014 ](img/corr_clust_14_1.png)
 ![Scatterplot de relaciones lineales y clustering en la region 4ta en 2015 ](img/corr_clust_15_4.png)
 
-Note que las correlaciones no son claras, la forma de los datos es densa. Sin embargo se pueden encontrar ciertas relaciones en la profundidad (Depth y la Longitud), un breve analysis muestra que esto es debido a la cercania de los sismos a las costas o dicho de una mejor manera al cinturon de fuego. El cinturon de fuego lleva como una capa superior a los continenetes que lo componen, entonces es mejor decir que a menor longitud mas profundiad por la forma de las capas de la tierra en esta zona del planeta. Esta relaciones es mejor representada en la region primera (Tarapaca) de Chile. No es el proposito de este estudio realizar mas conclusiones a estas relaciones de profundidad de un sismo.
+Note que las correlaciones no son claras, la forma de los datos es densa. Sin embargo se pueden encontrar ciertas relaciones en la profundidad (Depth y la Longitud), un breve análisis muestra que esto es debido a la cercania de los sismos a las costas o dicho de una mejor manera al cinturon de fuego. El cinturon de fuego lleva como una capa superior a los continenetes que lo componen, entonces es mejor decir que a menor longitud mas profundiad por la forma de las capas de la tierra en esta zona del planeta. Esta relaciones es mejor representada en la region primera (Tarapaca) de Chile. No es el proposito de este estudio realizar mas conclusiones a estas relaciones de profundidad de un sismo.
 
-Por otra parte, los grupos encontrados con respecto a la cantidad de IH forman grupos muy interesantes en la region cuarta. Los grupos se encuentran bien definidos en relacion a la profundidad. Existe una gran cantidad ingresos hospitalarios a baja profundidad. Se puede concluir entonces que la prediccion de incremento de incremento de IH con respecto a eventos sismicos no es trivial.
+Por otra parte, los grupos encontrados con respecto a la cantidad de IH forman grupos muy interesantes en la region cuarta. Los grupos se encuentran bien definidos en relación a la profundidad. Existe una gran cantidad ingresos hospitalarios a baja profundidad. Se puede concluir entonces que la predicción de incremento de incremento de IH con respecto a eventos sismicos no es trivial.
 
 # Clasificacion
 <!-- ### Arboles de Decision ETA -->
@@ -985,9 +1030,9 @@ En este sentido, para el futuro podrían aislarse las regiones y probar por cada
 
 ## Clasificador para Ingresos Hospitalarios
 
-El desarrollo del experimento de clasificacion en IH se realizo de manera analoga a la de ETA. A continuacion mostraremos el desarrollo de este expermiento.
+El desarrollo del experimento de clasificación en IH se realizo de manera analoga a la de ETA. A continuación mostraremos el desarrollo de este expermiento.
 
-## Distribucion de los incrementos/decrementos de Ingresos Hospitalarios
+## Distribución de los incrementos/decrementos de Ingresos Hospitalarios
 
 La distribusion de diferencia entre incremento y decremento muestra una distribusion quasi-normal. Donde las colas se encuentran estiradas e inclinadas a los decrementos. Esta diferencia no es mas que una simple suma entre cambios del dia en el que se produjo un sismo _\(d - delta\) + \(d + delta\)_. Recordando siempre que se toman los sismos >= 5 y tomando como _delta = {3, 7, 14}_. Recuerde que cuando analisamos los sismos de >= 6 o >=7 son solo un sub-conjunto de este.
 ```{r, eval=FALSE}
@@ -1012,9 +1057,9 @@ boxplot(d1$ING_DIFF,d2$ING_DIFF,d3$ING_DIFF, names=c("3","7","14"))
 
 
 ### Clasificador binario
-Clasificamos los datos binarios de los sismos, como _incremento_ o _decremento_. Utilizando el mismo analysis que en ETA. Obtenemos los datos utilizando un simple algoritmo utilizando la diferencia ya mencionada previamente.
+Clasificamos los datos binarios de los sismos, como _incremento_ o _decremento_. Utilizando el mismo análisis que en ETA. Obtenemos los datos utilizando un simple algoritmo utilizando la diferencia ya mencionada previamente.
 
-La distribusion mostrada anteriormente nos dice que los datos no se encuentran del todo balanceados. Por tanto haremos un balance de datos utilizando la estrategia _oversampling_ o _upsampling_, donde incrementamos el numero de la clase que se encuentran con menor tamanio.
+La distribusion mostrada anteriormente nos dice que los datos no se encuentran del todo balanceados. Por tanto haremos un balance de datos utilizando la estrategia _oversampling_ o _upsampling_, donde incrementamos el numero de la clase que se encuentran con menor tamaño.
 
 *Resultados de clasificadores con magnitud >= 5 y delta = 3*
 
@@ -1040,17 +1085,17 @@ Precision promedio | 0.4015495834059787| 0.42620754088348145| 0.4153288205478702
 Recall promedio | 0.5050258066525183 |0.3782505652987394 |0.949464422546 |0.48749837079762254 
 F1-score promedio | 0.44706266563950176|0.3998933267205183|0.5773383527694784|0.45843017970970346
 
-Se puede apreciar que el los clasificadores no son tienen un buen resultado en precision superando por poco a DummyClassifier. Dentro de los clasificadores tambien se puede apreciar que el clasificador NaiveBayes es el que tiene mejores resultados en _recall_ en promedio. Este resultado es interesante puesto que este problema predice informacion sensible. Es decir que nos favorece tener prediccion sobre falsos positivos y no en falsos negativos. Esta sentencia puede ser facilmente respaldada proponiendo un ejemplo hipotetico, si un evento sismico sucede en un 18 de Septiembre en la noche de la mayoria de la pobracio chilena se encuentra, ya en un evento o en sus casas, es mejor que el predictor haga mension que el incremento de ingresos hospitalarios, asi poder estar listos ante cualquier contingencia.
+Se puede apreciar que el los clasificadores no son tienen un buen resultado en precision superando por poco a DummyClassifier. Dentro de los clasificadores tambien se puede apreciar que el clasificador NaiveBayes es el que tiene mejores resultados en _recall_ en promedio. Este resultado es interesante puesto que este problema predice información sensible. Es decir que nos favorece tener predicción sobre falsos positivos y no en falsos negativos. Esta sentencia puede ser facilmente respaldada proponiendo un ejemplo hipotetico, si un evento sismico sucede en un 18 de Septiembre en la noche de la mayoria de la pobracio chilena se encuentra, ya en un evento o en sus casas, es mejor que el predictor haga mension que el incremento de ingresos hospitalarios, asi poder estar listos ante cualquier contingencia.
 
 
-### Classificacion Multi-clase 
-El clasificador multi-clase fue configurado analogamente a el analysis de ETA. Primero calculamos los cuantiles de los datos que tenemos.
+### Classificación Multi-clase 
+El clasificador multi-clase fue configurado analogamente a el análisis de ETA. Primero calculamos los cuantiles de los datos que tenemos.
 ```{r, eval=FALSE }
 quantile(d1$ING_DIFF, prob=seq(0, 1, length = 11))
 summary(d1$ING_DIFF)
 ```
 ![](img/uh_quantile_summ.png)
-La diferencia en ingresos se encuentra inclinada negativamente. En este caso la informacion mas sensible se encuentra en los incrementos, que es lo que desamos clasificar y predecir en un futuro. Entonces tomamos los el cuantil positivo (3rd cuantil) y utilizamos un umbral de valor = 75.
+La diferencia en ingresos se encuentra inclinada negativamente. En este caso la información mas sensible se encuentra en los incrementos, que es lo que desamos clasificar y predecir en un futuro. Entonces tomamos los el cuantil positivo (3rd cuantil) y utilizamos un umbral de valor = 75.
 
 En resumen, la clasificación queda como:
 
@@ -1087,8 +1132,8 @@ F1-score promedio | 0.24580116039825536|0.3629313448757567|0.3230796805553361|0.
 
 Aqui los resultados resultan satisfactorios. Si bien anteriormente apreciamos que NaiveBayes tiene buenos resultados en _recall_ en promedio, en este caso no podemos decir lo mismo.
 
-## Analysis de Clasificacion utilizando Decision-Tree
-Los arboles de decision nos pueden revelar informacion relacionada al creterio de clasificacion cuando las relaciones no son muy claras. En el siguiente analysis vemos que los criterios son los esperados a que un sismo tenga un gran impacto o no. Es decir la magnitud y profundidad.
+## Analysis de Clasificación utilizando Decision-Tree
+Los arboles de decision nos pueden revelar información relacionada al creterio de clasificación cuando las relaciones no son muy claras. En el siguiente análisis vemos que los criterios son los esperados a que un sismo tenga un gran impacto o no. Es decir la magnitud y profundidad.
 
 La imagen de abajo representa a un árbol de profundidad 1 utilizando el algoritmo DecisionTree. Cuando el árbol tiene una profundidad 1 el criterio de clasificación es la profundidad, lo cual representa la predominancia de este atributo para la predicción, igual como se mostró en el análisis de los datos.
 
@@ -1099,24 +1144,24 @@ La imagen de abajo representa a un árbol de profundidad 1 utilizando el algorit
 
 
 # Conclusiones 
-Estudiar la relacion de sismos con otros eventos ayuda a la toma de decisiones que mitigan los efectos negativos. Gracias a la gran cantidad de informacion recolectada de sismos en los ultimos anios es posible su mejor estudio. Sin embargo es complicado analyzar su relacion con otros eventos por falta de informacion satelite publica. Dentro de este analisis estudio las posibles correlaciones entre sismos y eventos humanos, como Enfermedades de Transmision alimentaria (ETA) e Ingresos Hospitalarios (IH). Este estudio busca explotar estas correlaciones de estos para poder crear un predictor ayude a detectar incremento en ETA e IH. Llegamos a ver una leve correlacion entre estos datos, gastamos varios recursos de data-mining para explorar la data. Tuvimos mucho cuidado manipulando la data y no introducir un error en el analysis.
+Estudiar la relación de sismos con otros eventos ayuda a la toma de decisiones que mitigan los efectos negativos. Gracias a la gran cantidad de información recolectada de sismos en los ultimos años es posible su mejor estudio. Sin embargo es complicado analyzar su relación con otros eventos por falta de información satelite publica. Dentro de este análisis estudio las posibles correlaciones entre sismos y eventos humanos, como Enfermedades de Transmision alimentaria (ETA) e Ingresos Hospitalarios (IH). Este estudio busca explotar estas correlaciones de estos para poder crear un predictor ayude a detectar incremento en ETA e IH. Llegamos a ver una leve correlación entre estos datos, gastamos varios recursos de data-mining para explorar la data. Tuvimos mucho cuidado manipulando la data y no introducir un error en el análisis.
 
-Creamos un algorimo para asignar regiones dentro de Chile a los eventos sismicos, el cual no se encuentra publico en ninguna parte.  Aprovechamos la geografia chilena para generar delimitaciones que reflejen las delimitaciones geograficas de las regiones. Filtramos informacion que nos fue util para el analysis. Consecuentemente utilizamos el tiempo y region chilena para poder unir los datos satelite, ETA e IH. Donde utilizamos tecnicas de agregacion para poder medir y unir la informacion satellite a los sismos. Este estudio se enfoco al volumen de estos eventos, tomadolos como echos atomicos. Es decir, no se considera otra informacion que venia junto a estos eventos humanos, ETA e IH. El corto tiempo de esta informacion no permitio ser mas estricto en este aspecto, es de un trabajo futuro poder ser mas explicitos en esta informacion.
+Creamos un algorimo para asignar regiones dentro de Chile a los eventos sismicos, el cual no se encuentra publico en ninguna parte.  Aprovechamos la geografia chilena para generar delimitaciones que reflejen las delimitaciones geograficas de las regiones. Filtramos información que nos fue util para el análisis. Consecuentemente utilizamos el tiempo y region chilena para poder unir los datos satelite, ETA e IH. Donde utilizamos tecnicas de agregación para poder medir y unir la información satellite a los sismos. Este estudio se enfoco al volumen de estos eventos, tomadolos como echos atomicos. Es decir, no se considera otra información que venia junto a estos eventos humanos, ETA e IH. El corto tiempo de esta información no permitio ser mas estricto en este aspecto, es de un trabajo futuro poder ser mas explicitos en esta informacion.
 
-Durante el analysis de correlacion utilizando _clustering_ y _correlacion lineal_ vimos cierta relacion entre la profundidad, magnitud y el incremento de ETA e IH, como tambien la region. Esto esta directamente relacionado al impacto de un sismo que usualmente se mide con la escala de Mercalli. Data que mida los sismos con la escala de Mercalli no pudo ser encontrada por ningun lado. Recordar que esta solo es encontrada cuando existen eventos que generen impacto negativo economico o humano, ademas de ser una escala subjetiva. La relacion de eventos humanos como ETA e IH son relacionados con el impacto de un sismo y este tambien depende a que tan bien la localidad del evento se encuentre preparado. Entonces la region donde ocurre un sismo tambien influye en los eventos humanos.
+Durante el análisis de correlación utilizando _clustering_ y _correlación lineal_ vimos cierta relación entre la profundidad, magnitud y el incremento de ETA e IH, como tambien la region. Esto esta directamente relacionado al impacto de un sismo que usualmente se mide con la escala de Mercalli. Data que mida los sismos con la escala de Mercalli no pudo ser encontrada por ningun lado. Recordar que esta solo es encontrada cuando existen eventos que generen impacto negativo economico o humano, ademas de ser una escala subjetiva. La relación de eventos humanos como ETA e IH son relacionados con el impacto de un sismo y este tambien depende a que tan bien la localidad del evento se encuentre preparado. Entonces la region donde ocurre un sismo tambien influye en los eventos humanos.
 
-Por ultimo creamos dos tareas de clasificacion, binaria y multi-clase. Los cuales buscan predecir incrementos de eventos humanos como ETA e IH. Los resultados en general no son buenos, comparados con un clasificador de juguete como DummyClassifier. Interesantemente encontramos una sorpresa en el clasificador binario, el clasificador Naive Bayes tuvo un buen score en _recall_ en promedio, llegando a tener un _recall_ de 0.96%. La medida de _recall_ es utilizada cuando se una tarea que incluye prediccion que es sensible. Es decir, que predice mas veces en predecir una falsa alarma. En este caso resulta ser considerado como positivo ya que ayuda a tener planes de contingencia ante un evento sismico. 
+Por ultimo creamos dos tareas de clasificación , binaria y multi-clase. Los cuales buscan predecir incrementos de eventos humanos como ETA e IH. Los resultados en general no son buenos, comparados con un clasificador de juguete como DummyClassifier. Interesantemente encontramos una sorpresa en el clasificador binario, el clasificador Naive Bayes tuvo un buen score en _recall_ en promedio, llegando a tener un _recall_ de 0.96%. La medida de _recall_ es utilizada cuando se una tarea que incluye predicción que es sensible. Es decir, que predice mas veces en predecir una falsa alarma. En este caso resulta ser considerado como positivo ya que ayuda a tener planes de contingencia ante un evento sismico. 
 
 
 # Anexo
 
-## Un simple analysis de sismos y precipitaciones
+## Un simple análisis de sismos y precipitaciones
 
-Se busca encontrar una relacion entre precipitaciones y sismos. En este analysis se toma encuenta los datos de temporadas de anio, son temporadas percivibles en las cuales podemos facilmente decernir si estos mantienen una relacion. Ademas buscamos relacion de sismos y los meses para tener un resultado mas cercano a fechas concretas.
+Se busca encontrar una relación entre precipitaciones y sismos. En este análisis se toma encuenta los datos de temporadas de año, son temporadas percivibles en las cuales podemos facilmente decernir si estos mantienen una relacion. Ademas buscamos relación de sismos y los meses para tener un resultado mas cercano a fechas concretas.
 
 ### Sismos por estaciones del año 
 
-La siguiente es una gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019. La grafica muestra que existe una aparente correlacion entre las temporadas del año y la cantidad de terremotos.
+La siguiente es una gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019. La grafica muestra que existe una aparente correlación entre las temporadas del año y la cantidad de terremotos.
 
 ```{r, eval=FALSE, message=FALSE, echo=FALSE}
 # load libraries
@@ -1164,11 +1209,11 @@ ggarrange(bplot, dplot,
                     ncol = 2, nrow = 1)
 
 ```
-![Relacion lluvia y sismos](img/rain_sis.png)
+![Relación lluvia y sismos](img/rain_sis.png)
 
-### Relacion entre precipitaciones y sismos por mes.
+### Relación entre precipitaciones y sismos por mes.
 
-Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros. A continuacion se muestra las caracteristicas del dataset, y el tratamiento y limpieza de los datos.
+Los datos fluviales fueron extraídos de la página web de CR2. Fueron tomados desde enero de 1900 hasta febrero de 2018, en 874 estaciones de todo Chile. Existen 2 variantes: la resolución temporal mensual o diaria. Las precipitaciones están medidas en milímetros. A continuación se muestra las caracteristicas del dataset, y el tratamiento y limpieza de los datos.
 
 Las dimensiones del dataset corresponden a 874 filas y 1431 columnas, correspondientes a los datos obtenidos en todos los años desde 1900 a 2018, por cada estación. Además, presentan datos como la latitud y longitud de la estación, la altura a la que se encuentra sobre el nivel del mar y la cuenca a la que pertenecen.
 
@@ -1270,7 +1315,7 @@ de Arica y Parinacota respecto a cada mes\n") + # título
 ```
 ![Precipitaciones en Arica y Parinacota](img/rain_local_ar_par.png)
 
-A continuacion una grafico de los sismos por mes vemos que estos no tiene ninguna relacion con el grafico de Promedio de precipitaciones por mes. Aunque el grafico es algo mas simple ese muestra no concordancia 
+A continuación una grafico de los sismos por mes vemos que estos no tiene ninguna relación con el grafico de Promedio de precipitaciones por mes. Aunque el grafico es algo mas simple ese muestra no concordancia 
 ```{r, message=FALSE, eval=FALSE}
 # load libraries
 library(tidyverse)
@@ -1366,3 +1411,154 @@ for name, clf in classifiers:
     print("----------------\n\n")
 ```
 
+**Codigo de asignación de Regiones para sismos**
+```{r, eval=FALSE}
+separateRegions <- function(DataFrame){
+  DataFrame$Region_Arica_Parinacota <- 0
+  DataFrame$Region_Tarapaca <- 0
+  DataFrame$Region_Antofagasta <- 0
+  DataFrame$Region_Atacama <- 0
+  DataFrame$Region_Coquimbo <- 0
+  DataFrame$Region_Valparaiso <- 0
+  DataFrame$Region_Metropolitana_Santiago <- 0
+  DataFrame$Region_Libertador_General_OHiggins <- 0
+  DataFrame$Region_Maule <- 0
+  DataFrame$Region_Nuble <- 0
+  DataFrame$Region_Biobio <- 0
+  DataFrame$Region_Araucania <- 0
+  DataFrame$Region_Rios <- 0
+  DataFrame$Region_Lagos <- 0
+  DataFrame$Region_Aysen_General_Carlos_Ibanez <- 0
+  DataFrame$Region_Magallanes_Antartica <- 0
+  for (i in 1:nrow(DataFrame)) {
+    if (DataFrame[i, "Region_Number"] == 1) {
+      DataFrame[i, "Region_Tarapaca"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 2) {
+      DataFrame[i, "Region_Antofagasta"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 3) {
+      DataFrame[i, "Region_Atacama"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 4) {
+      DataFrame[i, "Region_Coquimbo"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 5) {
+      DataFrame[i, "Region_Valparaiso"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 6) {
+      DataFrame[i, "Region_Libertador_General_OHiggins"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 7) {
+      DataFrame[i, "Region_Maule"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 8) {
+      DataFrame[i, "Region_Biobio"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] ==9) {
+      DataFrame[i, "Region_Araucania"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 10) {
+      DataFrame[i, "Region_Lagos"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 11) {
+      DataFrame[i, "Region_Aysen_General_Carlos_Ibanez"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 12) {
+      DataFrame[i, "Region_Magallanes_Antartica"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 13) {
+      DataFrame[i, "Region_Metropolitana_Santiago"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 14) {
+      DataFrame[i, "Region_Rios"] <- 1
+    }
+    else if (DataFrame[i, "Region_Number"] == 15) {
+      DataFrame[i, "Region_Arica_Parinacota"] <- 1
+    }
+    else {
+      DataFrame[i, "Region_Nuble"] <- 1
+    }
+  }
+  
+  return (data.frame(DataFrame))
+}
+```
+
+**Codigo de agregación de datos para Ingresos hospitalarios**
+```{r, eval =FALSE}
+calculate_prev_after <- function(reg, ing, k) {
+  min <- reg[['number_days']] - k
+  max <- reg[['number_days']] + k
+  
+  ing_data <-  with(ing, ing[REGION == reg[['Region_Number']], c('number_days', 'DIAG1', 'REGION','COMUNA')])
+  ings_bef <-  with(ing_data, ing_data[min <= number_days & number_days < reg[['number_days']], ]) 
+  ings_aft <-  with(ing_data, ing_data[reg[['number_days']] < number_days & number_days <= max, ]) 
+  
+  ings_bef <- nrow(ings_bef)
+  ings_aft <- nrow(ings_aft)
+
+  
+  return(data.frame(ING_BEFORE = ings_bef, ING_AFTER = ings_aft, ING_DIFF= (ings_aft - ings_bef)))
+}
+
+add_columns <- function(dataset, window) {
+  classes <- list()
+  first <- 1
+  for ( i in 1:nrow(dataset)) {
+    # print (i)
+    register <- dataset[i,]
+    ds <- get_dataset(register[['year']])
+    if (first == 1 ) {
+      ing_data <- calculate_prev_after(register, ds, window)
+      first <- 0
+    } else {
+      row <- calculate_prev_after(register, ds, window)
+      ing_data <- rbind(ing_data, row)
+    }
+    
+  }
+  # classes
+  ing_data
+}
+
+create_ing_data <- function(min_mag, window, data, file_path) {
+  sis_gt4 <- data[data$Magnitude >= min_mag & data$year >= 2008 & data$year <= 2018, ]
+  ing_data <- add_columns(sis_gt4, window)
+  
+  sis_gt4$ING_BEFORE <- ing_data$ING_BEFORE
+  sis_gt4$ING_AFTER <- ing_data$ING_AFTER
+  sis_gt4$ING_DIFF <- ing_data$ING_DIFF
+  write.csv(sis_gt4, file = file_path)
+  sis_gt4
+}
+
+```
+
+**codigo para generar data para clasificación binaria**
+```{r,eval =FALSE}
+for_binary_classification <- function (src_file, target_file) {
+  d <- read.csv(src_file)
+  d <- separateRegions(d)
+  d <- transform(d, class=ifelse(ING_DIFF > 0, 1, 0))
+  write.csv(d, file = target_file)
+  d
+}
+
+```
+
+**codigo para generar data para clasificación con 4 clases**
+```{r,eval =FALSE}
+for_four_class_classification <- function (src_file, target_file) {
+  d <- read.csv(src_file)
+  d <- separateRegions(d)
+  delta <- 75
+  d <- transform(d, class=ifelse(ING_DIFF > 0, ifelse(ING_DIFF>delta, 3, 2), ifelse(ING_DIFF < -delta, 0, 1) ))
+  write.csv(d, file = target_file)
+  d
+}
+
+for_four_class_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis7_d3.csv",
+      "/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/four_class/test.csv")
+
+```
