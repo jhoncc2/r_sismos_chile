@@ -243,77 +243,37 @@ Los datos sismicos son la principal fuente de informacion para los experimentos.
 - Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos los informes de ETA e IH. Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw (magnitud en la escala de Ritchter). 
 
 - Se realizo la clasificacion regional de los datos filtrando sismos que pertenezcan a Chile, agregando una columna para agregar el nombre de la region correspondiente (el codigo se encuentra en anexos). 
+
 - Se agrego datos en representacion de las fechas para facilitar las consultas a la data. 
+
 - Por ultimo se filtro aquellas columnas que si representaban un verdadero aporte para los casos de estudio.
 
 _Nota_. Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificacion. Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada analysis.
 
-### Procesamiento de datos para clasificacion (agregacion)
+### Aumento registrado según la región
 
-El experimento de clasificacion se realizo utilizando 
-La clasificacion se realizo utilizando un Δ,
+Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada magnitud y por cada región.
+Además, se puede extraer si se aprecia un aumento según cada magnitud y cada intervalo, obteniendo un resultado en cantidad de ETAs registradas posteriores o anteriores al sismo en promedio.
 
-Mediante esta función, entonces, se logró almacenar un _dataset_ para sismos, indicando en la columna Aumento el Δ: la diferencia entre cuántas ETAs se registraron los _dias_ días posteriores al sismo y los _dias_ días anteriores al sismo.
+```{r, message=FALSE, eval=FALSE}
+mean <- function(a) {sum(a)/length(a)}
 
+# Magnitud 5 o más
+(agg_5_7d <- aggregate(Aumento ~ Region, mag5_7d, FUN=mean))
 
-```{r generarDatos, eval=FALSE}
-generar_datos <- function(sismos, etas, magnitud_min, dias, escribir=TRUE) {
-  sismos_mag <- sismos[sismos$Magnitude >= magnitud_min
-                       & sismos$Year >= 2011 & sismos$Year <= 2017, ]
-  # Generar los dataframes
-  # datos es para trabajarlo en el árbol de decisión
-  datos <- data.frame(Magnitud = rep(0, nrow(sismos_mag)),
-                      Profundidad = rep(0, nrow(sismos_mag)),
-                      Region = rep(0, nrow(sismos_mag)),
-                      Aumento = rep(0, nrow(sismos_mag)))
-  # datos_con_fecha es para trabajarlo en lo que viene
-  datos_con_fecha <- data.frame(datos,
-                              Año = rep(0, nrow(sismos_mag)),
-                              Mes = rep(0, nrow(sismos_mag)))
-  for (i in 1:nrow(sismos_mag)) {
-    sismo <- sismos_mag[i, ]
-    # Tomar los dias días anteriores
-    etas_ant <- etas[sismo$num_date - dias/30/12 <= etas$num_date
-                     & etas$num_date <= sismo$num_date, ]
-    # Tomar los 7 días posteriores
-    etas_post <- etas[sismo$num_date < etas$num_date
-                      & etas$num_date <= sismo$num_date + dias/30/12, ]
-    # La diferencia es la cantidad de columnas de las posteriores menos las anteriores
-    dif <- nrow(etas_post) - nrow(etas_ant)
-    
-    # Asignar los valores a los datos
-    datos[i, ]$Magnitud <- sismo$Magnitude
-    datos[i, ]$Profundidad <- sismo$Depth
-    datos[i, ]$Region <- sismo$Region_Number
-    # A diferencia del Hito 2, se guarda el Δ completo
-    datos[i, ]$Aumento <- dif
-    # Guardar datos a retornar
-    datos_con_fecha[i, ] <- datos[i, ]
-    datos_con_fecha[i, ]$Año <- sismo$Year
-    datos_con_fecha[i, ]$Mes <- sismo$Month
-    
-  }
-  # Escribir el csv con los datos obtenidos
-  if (escribir) {
-    nombre_archivo <- paste("datos_mag", magnitud_min, "_", dias, "d.csv", sep="", collapse=NULL)
-    write.csv(datos, nombre_archivo, row.names=FALSE)
-  }
-  (datos_con_fecha)
-}
+# Magnitud 6 o más
+(agg_6_7d <- aggregate(Aumento ~ Region, mag6_7d, FUN=mean))
+
+# Magnitud 7 o más
+(agg_7_7d <- aggregate(Aumento ~ Region, mag7_7d, FUN=mean))
+
 ```
 
-
-El preprocesamiento y limpieza de estos datos se pudo realizar en los hitos anteriores.
-En este hito se logró estudiar mucho mejor el comportamiento de los datos de aumento según los intervalos de tiempo, y la magnitud, profundidad y región de los eventos sismológicos dados.
-
-# Minería de datos
-
-Dada la estructura de los datos, se diseñaron clasificadores en la forma de árboles de decisión.
-Así, se podrían identificar los atributos que el clasificador pudiera considerar importantes para hacer la predicción.
+Se aprecia que en general en promedio se registran aumentos en los reportes de ETAs para cada región.
+En la parte de Minería de datos se estudia con mayor detalle este hallazgo.
 
 
-### Enfermedades de transmisión alimentaria
-
+### Procesamiento de datos para clasificacion (agregacion)
 Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
 Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
 Además, se debió agregar la dimensión de temporalidad, necesaria para apreciar los datos.
@@ -325,18 +285,7 @@ Este valor se denominó Δ, con $\Delta = etas_{post} - etas_{ant}$.
 En el Hito 2 se representó con un 1 si el Δ era positivo, y un 0 si era negativo.
 El nuevo Δ permitió aumentar la cantidad de clases a estudiar.
 
-Luego, se realizó el árbol de decisión.
-El experimento consistió en generar un GridSearchCV de DecisionTree para criterios criterion gini y entropy, mientras que con una profundidad máxima de entre 1, 3 y 5 para los árboles generados.
-
-Esto se realizó en Python 3 mediante la librería `sklearn`.
-Se generaron archivos de texto que almacenaran los resultados para los distintos árboles.
-
 ![Imagen de cómo se calculó _aumento_](Imágenes/aumento.jpg)
-
-
-## Estudio de ETAs con clustering
-
-### Extracción de los sismos y sus Δs
 
 Se extraen para diferentes magnitudes (5, 6 y 7) e intervalos (de 3, 7, 14 y 30 días).
 Se crea una función para trabajar los datos más fácil.
@@ -409,28 +358,11 @@ mag7_14d <- generar_datos(sismos, etas, 7, 14)
 mag7_30d <- generar_datos(sismos, etas, 7, 30)
 ```
 
-### Aumento registrado según la región
 
-Procedemos a hacer un _aggregate_ con tal de contar cuánto aumentó, en promedio, por cada magnitud y por cada región.
-Además, se puede extraer si se aprecia un aumento según cada magnitud y cada intervalo, obteniendo un resultado en cantidad de ETAs registradas posteriores o anteriores al sismo en promedio.
 
-```{r, message=FALSE, eval=FALSE}
-mean <- function(a) {sum(a)/length(a)}
+# Clustering
 
-# Magnitud 5 o más
-(agg_5_7d <- aggregate(Aumento ~ Region, mag5_7d, FUN=mean))
-
-# Magnitud 6 o más
-(agg_6_7d <- aggregate(Aumento ~ Region, mag6_7d, FUN=mean))
-
-# Magnitud 7 o más
-(agg_7_7d <- aggregate(Aumento ~ Region, mag7_7d, FUN=mean))
-
-```
-
-Se aprecia que en general en promedio se registran aumentos en los reportes de ETAs para cada región.
-En la parte de Minería de datos se estudia con mayor detalle este hallazgo.
-
+## Clustering ETA
 ### Análisis del aumento con boxplot
 
 Se puede estudiar el balance de los datos por cada magnitud según la cantidad de días de intervalo tomados.
@@ -448,10 +380,10 @@ lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 outl_mag7 <- boxplot(mag7_3d$Aumento, mag7_7d$Aumento, mag7_14d$Aumento, mag7_30d$Aumento, main="Aumento para magnitud >= 7\ny 3, 7, 14 y 30 días de intervalo")$out
 lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 ```
-![Cu](img/mag_incr.png)
+![Aumento ETA con respecto a Sismos](img/mag_incr.png)
 
 Se ve que los datos para 30 días tienen mucha dispersión, y aquellos para 3 días están muy centrados al 0.
-Se aprecia además que hay muchos outliers por lo que se remueven para realizar el _clustering_
+Se aprecia además que hay muchos outliers por lo que se remueven para realizar el _clustering_.
 
 ```{r, eval=FALSE}
 mag5_7d_sinout <- mag5_7d[-which(mag5_7d$Aumento %in% outl_mag5), ]
@@ -474,7 +406,7 @@ lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 boxplot(mag7_7d_sinout$Aumento, mag7_14d_sinout$Aumento, main="Aumento para magnitud >= 7\ny 7 y 14 días sin outliers")
 lines(x=c(0, 5), y=rep(0, 2), col="red", lwd=2)
 ```
-![Cu](img/mag_incr_noout.png)
+![Aumento ETA con respecto a Sismos sin outliers](img/mag_incr_noout.png)
 
 ### Generación de los clusters con K-Means
 
@@ -527,7 +459,7 @@ wss1 <- elbow_fun(x1)
 
 plot(1:clust, wss1, type="b", main="Codo para mag. 5, 7d.", xlab="Nº de clusters", ylab="wss")
 ```
-![Cu](img/eta_sis_elbow.png)
+![Estrategia del codo para sismos y ETA](img/eta_sis_elbow.png)
 
 Se aprecia que el codo está en torno a los 5 clusters.
 
@@ -559,6 +491,16 @@ La suposición hecha en el hito anterior de no utilizar la región para clasific
 Se observa que para magnitud y profundidad, para las magnitudes 5 y 6 e intervalo de 7 y 14 días, se forman algunos grupos en que los ETAs aumentan y otros en que disminuyen.
 
 Se podría decir que estos grupos sufren una especie de contrarrestación mutua, siendo el _cluster_ con aumentos más claros el de color rojo generado para la magnitud 6, a 7 días de intervalo en la columna de Profundidad, y el color negro en la columna de Magnitud.
+
+
+# Clasificacion
+<!-- ### Arboles de Decision ETA -->
+
+<!-- El experimento consistió en generar un GridSearchCV de DecisionTree para criterios criterion gini y entropy, mientras que con una profundidad máxima de entre 1, 3 y 5 para los árboles generados. -->
+
+<!-- Esto se realizó en Python 3 mediante la librería `sklearn`. -->
+<!-- Se generaron archivos de texto que almacenaran los resultados para los distintos árboles. -->
+
 
 ## Clasificadores de enfermedades de transmisión alimentaria
 
@@ -1065,6 +1007,9 @@ En este sentido, para el futuro podrían aislarse las regiones y probar por cada
 ## Clasificador para ingresos hospitalarios
 
 
+
+
+
 # Anexo
 
 ```{r agregarFechas}
@@ -1150,7 +1095,7 @@ for name, clf in classifiers:
     print("----------------\n\n")
 ```
 
-## Estudio de Sismos y 
+
 ### Sismos por estaciones del año 
 
 La siguiente es una gráfica de sismos a través de las estaciones del año tomando en cuenta datos desde el año 1960 hasta el 2019. La grafica muestra que existe una aparente correlacion entre las temporadas del año y la cantidad de terremotos.
