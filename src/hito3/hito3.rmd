@@ -1187,7 +1187,6 @@ Precision promedio |  0.4045992532391457 | 0.43423935482523673 | 0.4312893109382
 Recall promedio | 0.48902361685024626 | 0.38223832381772865 | 0.8143813666109686 | 0.5045940698252863
 F1-score promedio | 0.4421608273227311 | 0.4059665700288416 | 0.5600709255119732 | 0.4681348468758294
 
-
 *Resultados de clasificadores con magnitud >= 5 y delta = 7*
 
 Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
@@ -1203,6 +1202,8 @@ Clasificador | Base Dummy | Decision Tree | Gaussian Naive Bayes | KNN
 Precision promedio | 0.4015495834059787| 0.42620754088348145| 0.41532882054787024| 0.43428140414898986
 Recall promedio | 0.5050258066525183 |0.3782505652987394 |0.949464422546 |0.48749837079762254 
 F1-score promedio | 0.44706266563950176|0.3998933267205183|0.5773383527694784|0.45843017970970346
+
+Se puede apreciar que el los clasificadores no son tienen un buen resultado en precision superando por poco a DummyClassifier. Dentro de los clasificadores tambien se puede apreciar que el clasificador NaiveBayes es el que tiene mejores resultados en _recall_ en promedio. Este resultado es interesante puesto que este problema predice informacion sensible. Es decir que nos favorece tener prediccion sobre falsos positivos y no en falsos negativos. Esta sentencia puede ser facilmente respaldada proponiendo un ejemplo hipotetico, si un evento sismico sucede en un 18 de Septiembre en la noche de la mayoria de la pobracio chilena se encuentra, ya en un evento o en sus casas, es mejor que el predictor haga mension que el incremento de ingresos hospitalarios, asi poder estar listos ante cualquier contingencia.
 
 
 ### Classificacion Multi-clase 
@@ -1242,7 +1243,26 @@ Precision promedio | 0.2563906674778534|0.3624337639804715|0.39474347014438027|0
 Recall promedio | 0.25317694415974595|0.3686265697204939|0.39462598654478326|0.3293566817345862
 F1-score promedio | 0.24580116039825536|0.3629313448757567|0.3230796805553361|0.3167516076350386
 
+Aqui los resultados resultan satisfactorios. Si bien anteriormente apreciamos que NaiveBayes tiene buenos resultados en _recall_ en promedio, en este caso no podemos decir lo mismo.
+
 ## Analysis de Clasificacion utilizando Decision-Tree
+Los arboles de decision nos pueden revelar informacion relacionada al creterio de clasificacion cuando las relaciones no son muy claras. En el siguiente analysis vemos que los criterios son los esperados a que un sismo tenga un gran impacto o no. Es decir la magnitud y profundidad.
+
+La imagen de abajo representa a un árbol de profundidad 1 utilizando el algoritmo DecisionTree. Cuando el árbol tiene una profundidad 1 el criterio de clasificación es la profundidad, lo cual representa la predominancia de este atributo para la predicción, igual como se mostró en el análisis de los datos.
+
+![Resultado del algoritmo DesicionTree con profundidad 1 ](../hito2/clasificador egresos/1precision.png)
+
+![Resultado del algoritmo DesicionTree con profundidad 3 ](../hito2/clasificador egresos/3precision.png)
+
+
+
+
+
+
+
+
+
+
 
 
 

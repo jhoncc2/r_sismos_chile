@@ -383,12 +383,64 @@ for_binary_classification("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Dat
 
 # Create files for four class classification
 
+
+
+```{r}
+
+d1 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d3.csv")
+d2 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d7.csv")
+d3 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d14.csv")
+
+par(mfrow=c(2,2))
+plot(density(d1$ING_DIFF),  main="Delta=3")
+rug(jitter(d1$ING_DIFF))
+
+plot(density(d2$ING_DIFF),  main="Delta=7")
+rug(jitter(d2$ING_DIFF))
+
+plot(density(d3$ING_DIFF),  main="Delta=14")
+rug(jitter(d3$ING_DIFF))
+
+boxplot(d1$ING_DIFF,d2$ING_DIFF,d3$ING_DIFF, names=c("3","7","14"))
+
+```
+```{r}
+d <- d1[d1$ING_DIFF <= 0, ]
+dd <- d1[d1$ING_DIFF > 0, ]
+
+# decremento
+par(mfrow=c(2,2))
+plot(density(d$Magnitude),  main="Densidad de Dec-IH y Magnitud")
+rug(jitter(d$Magnitude))
+
+plot(density(d$Magnitude),  main="Densidad de Dec-IH y Profundidad")
+rug(jitter(d$Magnitude))
+
+# incremento
+
+plot(density(dd$Magnitude),  main="Densidad de Inc-IH y Magnitud")
+rug(jitter(dd$Magnitude))
+
+plot(density(dd$Magnitude),  main="Densidad de Inc-IH y Profundidad")
+rug(jitter(dd$Magnitude))
+```
+
+
+
+```{r}
+quantile(d1$ING_DIFF, prob=seq(0, 1, length = 11))
+da <- d[d$ING_DIFF > 50,]
+
+```
+
+
 ```{r}
  
 for_four_class_classification <- function (src_file, target_file) {
   d <- read.csv(src_file)
   d <- separateRegions(d)
-  d <- transform(d, class=ifelse(ING_DIFF > 0, ifelse(ING_DIFF>10, 3, 1), 0))
+  delta <- 75
+  d <- transform(d, class=ifelse(ING_DIFF > 0, ifelse(ING_DIFF>delta, 3, 2), ifelse(ING_DIFF < -delta, 0, 1) ))
   write.csv(d, file = target_file)
   d
 }
