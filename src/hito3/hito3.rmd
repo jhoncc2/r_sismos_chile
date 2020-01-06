@@ -191,7 +191,7 @@ etas <- agregarFechasEtas(etas)
 
 Después, se guardan los datos en data frames *cant_etas* y *cant_etas_deshidratacion*, para obtener algunos gráficos:
 
-```{r graficosETAs, echo=FALSE}
+```{r graficosETAs, echo=FALSE, eval=FALSE}
 
 cant_etas <- data.frame("Año"=etas$Año.estadistico, "Región"=etas$Región.de.consumo,
                         "Cantidad"=etas$Región.de.consumo)
@@ -463,7 +463,7 @@ Se aprecia que el codo está en torno a los 5 clusters.
 Se procede a realizar los clusters con K-Means.
 Para ello se ejecuta el siguiente _script_:
 
-```{r}
+```{r, eval=FALSE}
 set.seed(3)
 cant_clusters <- 5
 ns <- 20
@@ -482,6 +482,12 @@ pairs(x4, col=km.out4$cluster, pch=8, main="Clustering para magnitud 6 y 14 día
 pairs(x5, col=km.out5$cluster, pch=8, main="Clustering para magnitud 7 y 7 días")
 pairs(x6, col=km.out6$cluster, pch=8, main="Clustering para magnitud 7 y 14 días")
 ```
+![Scatterplot de relaciones lineales y clustering para magnitud 6 y 7 dias](img/eta_corr_cluster/corr_clust_5_7.png)
+![Scatterplot de relaciones lineales y clustering para magnitud 6 y 7 dias](img/eta_corr_cluster/corr_clust_5_14.png)
+![Scatterplot de relaciones lineales y clustering para magnitud 6 y 7 dias](img/eta_corr_cluster/corr_clust_6_7.png)
+![Scatterplot de relaciones lineales y clustering para magnitud 6 y 7 dias](img/eta_corr_cluster/corr_clust_6_14.png)
+![Scatterplot de relaciones lineales y clustering para magnitud 6 y 7 dias](img/eta_corr_cluster/corr_clust_7_7.png)
+![Scatterplot de relaciones lineales y clustering para magnitud 6 y 7 dias](img/eta_corr_cluster/corr_clust_7_14.png)
 
 Se observa que para la región, no se encuentran clusters claros.
 La suposición hecha en el hito anterior de no utilizar la región para clasificar parece haber sido acertada.
@@ -493,9 +499,9 @@ Se podría decir que estos grupos sufren una especie de contrarrestación mutua,
 
 ### Datos Sismológicos e Ingresos de pacientes a Hospitales 
 
-Los datos de IH son mucho mas numerosos que los de ETA por tanto veremos la posibilidad de analyzar solo los casos mas relevantes por Region. Bajo la asumpción de que los datos de ingresos de pacientes a centros hospitalarios incrementa cuando ocurren un evento sísmico, analizaremos las características principales de sismos con el numero de Ingresos a hospitales. El siguiente gráfico muestra la frecuencia de sismos en las regiones de Chile desde 2008 al 2018. Por legibilidad nos referiremos a ingresos de personas a centros hospitalarios como ICH desde ahora.
+Los datos de IH son mucho mas numerosos que los de ETA por tanto veremos la posibilidad de analyzar solo los casos mas relevantes por Region. Bajo la asumpción de que los datos de ingresos de pacientes a centros hospitalarios incrementa cuando ocurren un evento sísmico, analizaremos las características principales de sismos con el numero de Ingresos a hospitales. El siguiente gráfico muestra la frecuencia de sismos en las regiones de Chile desde 2008 al 2018. 
 
-Note que solo consideramos el numero de ICHs para definir el impacto de un sismo. Se omiten los demas datos que para este hito son considerados como relevantes. Corresponde a un trabajo futuro un analysis mas exhaustivo de estos datos y como afectan a la predicción.
+Note que solo consideramos el numero de IHs para definir el impacto de un sismo. Se omiten los demas datos que para este hito son considerados como relevantes. Corresponde a un trabajo futuro un analysis mas exhaustivo de estos datos y como afectan a la predicción.
 
 ```{r, eval=FALSE}
 library(ggplot2)
@@ -603,12 +609,6 @@ cluster_10 <- kmeans(red_10, 4)
 cluster_14 <- kmeans(red_14, 4)
 cluster_15 <- kmeans(red_15, 4)
 
-# library("ggplot2")
-# library("GGally") 
-# w <- as.data.frame(km.out1)
-# w$cluster <- factor(km.out1$cluster)
-# ggpairs(w)
-
 par(mfrow=c(2,2))
 clusplot(red_10, cluster_10$cluster, color=TRUE, shade=FALSE, lines=1)
 clusplot(red_14, cluster_14$cluster, color=TRUE, shade=FALSE, lines=1)
@@ -618,10 +618,10 @@ clusplot(red_15, cluster_15$cluster, color=TRUE, shade=FALSE, lines=1)
 ![Cluster de sismos e IH](img/cluster_ih.png)
 
 ### Graficos de Correlacion y clustering
-El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 3. Note que para todos los casos, 'n' representa el numero de ICH de un sismo en una fecha determinada.
+El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 4. Note que para todos los casos, 'n' representa el numero de IH de un sismo en una fecha determinada.
 
 ### Graficos de Correlacion de atributos en clustering
-El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 3. Note que para todos los casos, 'n' representa el numero de ICH de un sismo en una fecha determinada.
+El siguiente grafico muestra la matriz de cluster y correlacion de la 7ma region en el anio 2010, con k = 4. Note que para todos los casos, 'n' representa el numero de IH de un sismo en una fecha determinada.
 ```{r, eval=FALSE}
 d_10 <- j_10[col_list]
 d_14 <- j_14[!is.na(j_14$COMUNA), col_list]
@@ -635,12 +635,6 @@ par(mfrow=c(3, 1))
 pairs(d_10, col=fit$cluster)
 pairs(d_14, col=fit$cluster)
 pairs(d_15, col=fit$cluster)
-
-# plot(fit[], main="Resultados usando k = 2", xlab="", ylab="")
-
-# clusplot(j_10, fit$cluster, color=TRUE, shade=TRUE,
-   # labels=2, lines=0)
-
 ```
 ![Scatterplot de relaciones lineales y clustering en la region 7ma en 2010 ](img/corr_clust_10_7.png)
 ![Scatterplot de relaciones lineales y clustering en la region 1ra en 2014 ](img/corr_clust_14_1.png)
@@ -697,12 +691,12 @@ En la siguiente sección se explica por qué se escogió 12 como umbral.
 Para el nuevo clasificador, fue necesario determinar un umbral con tal de definir la disminución marcada, la disminución tenue, el aumento tenue y el aumento marcado.
 
 Se cargan los datos con la función *generar_datos*, de la forma
-```{r}
+```{r, eval=FALSE}
 mag4_7d <- generar_datos(sismos, etas, 4, 7, escribir=FALSE)
 ```
 
 Luego se determinó el número para el umbral observando el comportamiento parecido a una distribución normal observado para los datos de magnitud 5
-```{r}
+```{r, eval=FALSE}
 quantile(mag4_7d$Aumento, prob=seq(0, 1, length = 11))
 ```
 
@@ -746,7 +740,7 @@ Sin embargo, se decidió que no se limitaría a investigar el comportamiento de 
 ### Resultados clasificador de árbol de decisión
 
 Las siguientes librerías son necesarias para ejecutar los scripts:
-```{python}
+```{python, eval=FALSE}
 import numpy as np
 import pandas as pd
 
@@ -773,7 +767,7 @@ datos_dir= "Diferencia ETAs por magnitud/"
 
 Este es el clasificador que se usó para las clases de «Aumento» o «Disminución».
 
-```{python}
+```{python, eval=FALSE}
 def exportTreeImage(dtree, X, y, path):
     # Create dot data
     dot_data = tree.export_graphviz(dtree, out_file=None,
@@ -837,7 +831,7 @@ main()
 #### Clasificador de 4 clases
 
 Este es el clasificador utilizado para las clases de Aumento/Disminución Alta/Baja.
-```{python}
+```{python, eval=FALSE}
 def exportTreeImage(dtree, X, y, path):
     # Create dot data
     dot_data = tree.export_graphviz(dtree, out_file=None,
@@ -1185,7 +1179,7 @@ agregarFechasEtas <- function(dataframe) {
 ```
 
 
-```{python}
+```{python , eval=FALSE}
 #################################
 # Competencia de clasificadores #
 #################################
@@ -1196,8 +1190,6 @@ from sklearn.metrics import f1_score, recall_score, precision_score
 
 def run_classifier(clf, X, y, num_tests=100):
     metrics = {'f1-score': [], 'precision': [], 'recall': []}
-    
-
     
     for _ in range(num_tests):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.30)
