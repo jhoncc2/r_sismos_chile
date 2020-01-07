@@ -141,7 +141,7 @@ ggplot(season_data, mapping = aes(x=year)) +
 <!-- Por esto, tienen la misma clasificación que ellos. -->
 
 ## Datos de registros de ingresos hospitalarios
-Los datos de Ingresos Hospitalarios (IH) son bastos, la collección que se pudo recabar data de los años 2018 a 2019. Primero vemos la cantidad de elementos por año es basta y varia, como se ver el grafico de abajo. No encontramos ninguna justificación por la que esto ocurre en la pagina del DEIS.
+Los datos de Ingresos Hospitalarios (IH) son vastos, la colección que se pudo recabar data de los años 2018 a 2019. Primero vemos que la cantidad de elementos por año es vasta y variada, como se ve en el grafico de abajo. No se encontró ninguna justificación por la que esto ocurre en la página del DEIS.
 
 ```{r, eval=FALSE}
 f <- data.frame(year= c(2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018),
@@ -152,13 +152,14 @@ plot(f, type="l")
 
 
 
-Esta información cuenta con varios campos, dentro de los mas interesantes son los mensionados a continuacion: COMUNA, FECHA_EGR, DIAS_ESTAD, REGION, y DIAG1. Pronto vemos que el numero de diagnosticos unicos son miles por lo tanto no sirven de ayuda para filtrar estos datos.
+Esta información cuenta con varios campos, dentro de los mas interesantes son los mencionados a continuacion: COMUNA, FECHA_EGR, DIAS_ESTAD, REGION, y DIAG1. Pronto vemos que el numero de diagnosticos unicos son miles por lo tanto no sirven de ayuda para filtrar estos datos.
 
 ```{r, echo=FALSE, eval=FALSE}
 sum(lengths(unique(egr_2008$DIAG1)))
 ```
 ![](img/ing_number_diag.png)
-Dentro de este análisis buscamos encontrar los ingresos hospitalarios. Sin embargo estos los datos originales no muestran este datos, sin embargo podemos genrar una nueva columna de _fecha de ingreso_ utilizando la formula _FECHA_EGR - DIAS_ESTAD_. Un problema encontrado para generar esta nueva columna fue que los formatos de las fechas puede variar de acuerdo el año que se encuentre. El siguiente codigo muestra el algoritmo que se utilizo para este proceso.
+
+Dentro de este análisis buscamos encontrar los ingresos hospitalarios. Sin embargo, los datos originales no muestran este datos, aunque podemos genrar una nueva columna de _fecha de ingreso_ utilizando la formula _FECHA_EGR - DIAS_ESTAD_. Un problema encontrado para generar esta nueva columna fue que los formatos de las fechas pueden variar de acuerdo el año que se encuentre. El siguiente codigo muestra el algoritmo que se utilizo para este proceso.
 
 ```{r, eval= FALSE}
 ddd <- data.frame(a=c(1,2,3))
@@ -195,6 +196,7 @@ Los datos de salud alimentaria fueron extraídos de la página web del Departame
 Se extrajeron datos de los brotes de enfermedades transmitidas por alimentos desde el año 2011 hasta el 2017, siendo estos todos los disponibles.
 
 Para hacer una primera exploración de los resultados, se contó la cantidad de casos de enfermedades transmitidas por alimentos reportadas cada año para algunas regiones afectadas por terremotos grandes que ocurrieron en el periodo 2011-2017, aquellos de Iquique el año 2014 y de Illapel el año 2015.
+Esto se realizó en el hito anterior.
 
 Ahora, los sismos vienen con las columnas _Year_, _Month_ y _Day_, que fueron generados con una función similar a _agregarFechas_ que se encuentra en el anexo.
 También incluyen las regiones: estas fueron generadas mediante la función *cargar_sismos_por_region* que se encuentra en el anexo.
@@ -273,11 +275,16 @@ ggarrange(a, b, c,
 
 # Diseño experimental
 
-Dentro del disenio experimental se inclino a realizar un análisis de clustering y clasificación de sismos con respecto a eventos ETA y IH. Este necesito de un riguroso análisis de los datos para poder procesar y preparar la data. Dentro de los cambios mas fuertes fue el de la categorización de los datos sismos (datos geograficos) en regiones a Chile. Ademas del filtrado de los caracteristicas utiles para este análisis.
+Dentro del diseño experimental se inclino a realizar un análisis de clustering y clasificación de sismos con respecto a eventos ETA e IH.
+Este necesitó de un riguroso análisis de los datos para poder procesar y preparar la data.
+Dentro de los cambios más fuertes fue el de la categorización de los datos sismos (datos geograficos) en regiones a Chile.
+Ademas del filtrado de los caracteristicas utiles para este análisis.
 
-Se plantea una clasificación de sismos binaria y otra de cuatro dimensiones de incrementos en ETA y IH. En cuanto a los clusterings se muestra la correlación los sismos tienen con los incrementos de ETA y IH, asi encontrar una segementación que nos ayude la relación de estos fenomenos.
+Se plantea una clasificación de sismos binaria y otra de cuatro dimensiones de incrementos en ETA y IH. En cuanto a los clusterings se muestra la correlación que los sismos tienen con los incrementos de ETA e IH, así como encontrar una segementación que nos ayude la relación de estos fenómenos.
 
-:TODO brief conclusion
+Se pudo concluir que los eventos sísmicos efectivamente están relacionados con aumentos en las cantidades de ETAs e IHs, debido a que para ambos casos, se encontraron correlaciones previas a la generación de los clasificadores. Sin embargo, no fue posible generar buenos clasificadores para los eventos.
+Aunque, para el caso de los IH, el _recall_ obtenido fue bastante alto (0,98%), lo que se considera positivo, pues ayuda a tener planes de contingencia ante un evento sísmico.
+
 
 ## Limpieza de los datos
 
@@ -285,15 +292,15 @@ Se plantea una clasificación de sismos binaria y otra de cuatro dimensiones de 
 
 Los datos sismicos son la principal fuente de información para los experimentos. Este requirio de los siguiente pasos.
 
-- Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos los informes de ETA e IH. Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw (magnitud en la escala de Ritchter). 
+* Con el nuevo objetivo definido, se buscó encontrar la correlación que se produce entre los sismos los informes de ETA e IH. Para ello, se decidió utilizar solamente aquellos sismos de magnitud mayor o igual a 5 Mw (magnitud en la escala de Ritchter). 
 
-- Se realizo la clasificación regional de los datos filtrando sismos que pertenezcan a Chile, agregando una columna para agregar el nombre de la region correspondiente (el codigo se encuentra en anexos). 
+* Se realizo la clasificación regional de los datos filtrando sismos que pertenezcan a Chile, agregando una columna para agregar el nombre de la region correspondiente (el codigo se encuentra en anexos). 
 
-- Se agrego datos en representación de las fechas para facilitar las consultas a la data. 
+* Se agregaron datos en representación de las fechas para facilitar las consultas a la data. 
 
-- Por ultimo se filtro aquellas columnas que si representaban un verdadero aporte para los casos de estudio ('Latitude', 'Longitude', 'Depth', 'COMUNA').
+* Por último se filtraron aquellas columnas que sí representaban un verdadero aporte para los casos de estudio ('Latitude', 'Longitude', 'Depth', 'COMUNA').
 
-_Nota_. Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificación . Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada análisis.
+_Nota_: Lo anterior mensionado es suficiente para poder utilizar los datos, sin embargo estos no son suficientes como veremos mas adelante. Por ejemplo, es necesario escalar los datos para el clustering y clasificación . Ademas los datos satelite (ETA e IH) obligan que existan ciertas restricciones en cada análisis.
 
 ### Aumento registrado según la región
 
@@ -318,7 +325,8 @@ Se aprecia que en general en promedio se registran aumentos en los reportes de E
 En la parte de Minería de datos se estudia con mayor detalle este hallazgo.
 
 
-### Procesamiento de datos para clasificación (agregacion)
+### Procesamiento de datos para clasificación (agregación)
+
 Para generar correctamente un modelo de clasificación, se necesitó pensar en un procedimiento efectivo que dijera con certeza si un terremoto realmente provocó daños.
 Esto, con base en la hipótesis de que mientras más daños pueda generar un sismo, más informes por ETAs se generan.
 Además, se debió agregar la dimensión de temporalidad, necesaria para apreciar los datos.
@@ -1030,11 +1038,11 @@ En este sentido, para el futuro podrían aislarse las regiones y probar por cada
 
 ## Clasificador para Ingresos Hospitalarios
 
-El desarrollo del experimento de clasificación en IH se realizo de manera analoga a la de ETA. A continuación mostraremos el desarrollo de este expermiento.
+El desarrollo del experimento de clasificación en IH se realizo de manera analoga a la de ETA. A continuación se muestra el desarrollo de este expermiento.
 
 ## Distribución de los incrementos/decrementos de Ingresos Hospitalarios
 
-La distribusion de diferencia entre incremento y decremento muestra una distribusion quasi-normal. Donde las colas se encuentran estiradas e inclinadas a los decrementos. Esta diferencia no es mas que una simple suma entre cambios del dia en el que se produjo un sismo _\(d - delta\) + \(d + delta\)_. Recordando siempre que se toman los sismos >= 5 y tomando como _delta = {3, 7, 14}_. Recuerde que cuando analisamos los sismos de >= 6 o >=7 son solo un sub-conjunto de este.
+La distribusion de diferencia entre incremento y decremento muestra una distribusion quasi-normal. Donde las colas se encuentran estiradas e inclinadas a los decrementos. Esta diferencia no es mas que una simple suma entre cambios del dia en el que se produjo un sismo _\(d - delta\) + \(d + delta\)_. Recordando siempre que se toman los sismos ≥ 5 y tomando como _delta = {3, 7, 14}_. Recuerde que cuando analizamos los sismos de ≥ 6 o ≥ 7 son solo un sub-conjunto de este.
 ```{r, eval=FALSE}
 d1 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d3.csv")
 d2 <- read.csv("/Users/jhonc/Workspace/data-mining/r_sismos_chile/Datasets sismológicos/ing_data/ing_sis5_d7.csv")
@@ -1088,7 +1096,7 @@ F1-score promedio | 0.44706266563950176|0.3998933267205183|0.5773383527694784|0.
 Se puede apreciar que el los clasificadores no son tienen un buen resultado en precision superando por poco a DummyClassifier. Dentro de los clasificadores tambien se puede apreciar que el clasificador NaiveBayes es el que tiene mejores resultados en _recall_ en promedio. Este resultado es interesante puesto que este problema predice información sensible. Es decir que nos favorece tener predicción sobre falsos positivos y no en falsos negativos. Esta sentencia puede ser facilmente respaldada proponiendo un ejemplo hipotetico, si un evento sismico sucede en un 18 de Septiembre en la noche de la mayoria de la pobracio chilena se encuentra, ya en un evento o en sus casas, es mejor que el predictor haga mension que el incremento de ingresos hospitalarios, asi poder estar listos ante cualquier contingencia.
 
 
-### Classificación Multi-clase 
+### Clasificación Multi-clase 
 El clasificador multi-clase fue configurado analogamente a el análisis de ETA. Primero calculamos los cuantiles de los datos que tenemos.
 ```{r, eval=FALSE }
 quantile(d1$ING_DIFF, prob=seq(0, 1, length = 11))
@@ -1101,8 +1109,8 @@ En resumen, la clasificación queda como:
 
 
 * Aumento < -75: disminución alta
-* Aumento <= 0: disminución baja
-* Aumento <= 75: aumento bajo
+* Aumento ≤ 0: disminución baja
+* Aumento ≤ 75: aumento bajo
 * Caso contrario: aumento alto
 
 
